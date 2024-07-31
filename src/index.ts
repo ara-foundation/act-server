@@ -131,6 +131,16 @@ app.get("/add-nft-addon-task/:netId/:txid", async (req:Request, res: Response) =
     res.json(task);
 });
 
+app.get("/stats", async (req: Request, res: Response) => {
+    res.json({
+        checkProjects: 12,      // number of projects
+        tasks: 51,              // number of created tokens
+        paidWork: 2300,         // number of distributed tokens
+        averageEarning: 1500,   // per month
+        averageSpending: 4,     // hours per day
+    })
+})
+
 connectToDatabase()
     .then(async () => {
         app.listen(port, () => {

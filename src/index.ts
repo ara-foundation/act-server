@@ -1,11 +1,11 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import { ObjectId, WithId } from "mongodb";
-import { randomUUID } from "crypto";
+import { ObjectId } from "mongodb";
 import cors from "cors";
 import { collections, connectToDatabase  } from "./db";
 import { all as allProjects } from "./project";
-import { txToTask as txToNftAddonTask, taskBySourceId, nftAddonSourceId, saveTask } from "./nft_addon_task";
+import { txToTask as txToNftAddonTask, taskBySourceId, nftAddonSourceId, saveTask, animateTitle, animateContent } from "./nft_addon_task";
+import { Task } from "./types";
 
 dotenv.config();
 
@@ -18,6 +18,39 @@ app.use(cors());
 app.get("/", (_req: Request, res: Response) => {
     res.json({status: "OK", title: "Ara ACT Server"});
 });
+
+if (process.env.NODE_ENV !== "production") {
+    app.get("/mock-nft-addon/:netId/:txid", async (req: Request, res: Response) => {
+        const networkId = req.params.netId;
+        const txid = req.params.txid;
+
+        let task = await txToNftAddonTask(networkId, txid);
+        if (typeof(task) === "string") {
+            res.status(400).json({message: task as string});
+            return;
+        }
+
+        let tasks: Task[] = [];
+    
+        for (let i = 2127; i < 50 + 2127; i++) {
+            const nftId = `${i}`;
+            const walletAddress = `0xaddr_${nftId}`;
+
+            const sourceId = nftAddonSourceId(networkId, `0xtx_of_${nftId}`);
+            const title = animateTitle(nftId);
+            const content = animateContent(walletAddress, nftId);
+            
+            task.sourceId = sourceId;
+            task.title = title;
+            task.content = content;
+
+            tasks.push(JSON.parse(JSON.stringify(task)) as Task);
+        }
+        await collections.tasks?.insertMany(tasks);
+
+        res.json({status: "OK", message: "inserted nfts from 2127 to 2176"});
+    });
+}
 
 /**
  * Returns all projects

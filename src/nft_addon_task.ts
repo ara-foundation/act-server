@@ -135,10 +135,8 @@ export const txToTask = async (networkId: string, tx: string): Promise<string|Ta
         maintainer: foundDocument.leader,
         projectId: foundDocument._id,
         checkProjectId: checkProject!.id!,
-        title: `Animate NFT ${nftId}`,
-        content: `A user ${walletAddress} asked to animate his NFT.
-        You can check base on https://github.com/kidagine/Darklings-FightingGame as our game is based on that.
-        `,
+        title: animateTitle(nftId),
+        content: animateContent(walletAddress, nftId),
         categories: ["Design", "Art"],
         tags: ["2d", "sprite", "game"],
         created: block.timestamp,        // Unix timestamp when this task was created
@@ -153,6 +151,15 @@ export const txToTask = async (networkId: string, tx: string): Promise<string|Ta
         status: "created",
     };
     return task;
+}
+
+export const animateTitle = (nftId: string): string => {
+    return `Animate NFT ${nftId} for the pixel art game`;
+}
+
+export const animateContent = (walletAddress: string, nftId: string): string => {
+    return `A user ${walletAddress} asked to animate his NFT.
+    You can check base on https://github.com/kidagine/Darklings-FightingGame as our game is based on that.`;
 }
 
 export const saveTask = async (task: Task): Promise<undefined|string> => {

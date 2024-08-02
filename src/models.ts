@@ -16,6 +16,7 @@ export class TaskModel {
         public prizeType: Token,
         public status: TaskStatus,
         public sourceId: string,
+        public images?: Link[],
     ) {}
 }
 export class UserModel {

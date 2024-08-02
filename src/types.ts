@@ -98,4 +98,5 @@ export type Task = {
     prizeType: Token,
     status: TaskStatus,
     sourceId: string,
+    images?: Link[]
 }

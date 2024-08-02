@@ -294,7 +294,7 @@ export const all = async (): Promise<TaskModel[]> => {
 
     for (let i in rawRows) {
         let raw = rawRows[i];
-        if (raw.project.length == 0 || raw.maintainerInfo.length == 0) {
+        if (raw.project.length == 0) {// || raw.maintainerInfo.length == 0) {
             continue;
         }
 
@@ -308,9 +308,9 @@ export const all = async (): Promise<TaskModel[]> => {
             projectVideo: raw.project[0].video,
             projectDescription: raw.project[0].description,
             projectUrl: "",
-            maintainerUserName: raw.maintainerInfo[0].username,
-            maintainerLastName: raw.maintainerInfo[0].lastname,
-            maintainerFirstName: raw.maintainerInfo[0].firstname,
+            maintainerUserName: "", //raw.maintainerInfo[0].username,
+            maintainerLastName: "", //raw.maintainerInfo[0].lastname,
+            maintainerFirstName: "", //raw.maintainerInfo[0].firstname,
         }
         
         rows.push(JSON.parse(JSON.stringify(rowWithData)));

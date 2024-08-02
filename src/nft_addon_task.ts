@@ -272,14 +272,15 @@ export const all = async (): Promise<TaskModel[]> => {
               'foreignField': '_id', 
               'as': 'project'
             }
-          }, {
+          }, 
+          /*{
             '$lookup': {
               'from': 'users', 
               'localField': 'maintainer', 
               'foreignField': '_id', 
               'as': 'maintainerInfo'
             }
-          }
+          }*/
     ];
 
     let cursor = collections.tasks?.aggregate(agg);

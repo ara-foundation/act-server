@@ -1,3 +1,4 @@
+import { IncludedPost, IncludedUser } from "@ara-foundation/flarum-js-client/dist/types"
 import { ObjectId } from "mongodb"
 
 export type Contract = {
@@ -83,6 +84,7 @@ export type CheckProjectParams = {
 }
 
 export type TaskStatus = "done" | "pending" | "created";
+
   
 export type Task = {
     maintainer: ObjectId,
@@ -99,4 +101,41 @@ export type Task = {
     status: TaskStatus,
     sourceId: string,
     images?: Link[]
+}
+
+export type LungtaType = "logos" | "story" | "maydone" | "act" | "sangha";
+
+export type AraUser = {
+  id: number;
+  attributes: {
+    username: string;
+    displayName?: string;
+    avatarUrl?: string;
+    slug?: string;
+    discussionCount?: number;
+    commentCount?: number;
+    lastSeenAt?: string;
+    isEmailConfirmed?: boolean;
+    email: string;
+    points?: number;
+  };
+};
+
+
+export type AraDiscussion = {
+  type: LungtaType;
+  id: number;
+  attributes: {
+        title: string;
+        slug?: string;
+        commentCount?: number;
+        participantCount?: number;
+        createdAt?: string;
+        lastPostedAt?: string;
+        lastPostNumber?: number;
+    };
+    relationships: {
+        user?: IncludedUser;
+        firstPost?: IncludedPost;
+    };
 }

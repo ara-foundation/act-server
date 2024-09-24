@@ -1,5 +1,5 @@
-import { collections } from "./db";
-import { ProjectModel } from "./models";
+import { collections } from "../db";
+import { ProjectModel } from "../models";
 
 export const all = async (): Promise<ProjectModel[]> => {
     let cursor = collections.projects?.find({});

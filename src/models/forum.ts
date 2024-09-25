@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { FlarumApi, FlarumDiscussions, FlarumUsers } from "@ara-foundation/flarum-js-client";
-import { Discussions, DiscussionData, IncludedUser, IncludedPost, DiscussionFilter } from "@ara-foundation/flarum-js-client/dist/types"
+import { FlarumApi, FlarumDiscussions, Discussions, DiscussionData, IncludedUser, IncludedPost, DiscussionFilter, Discussion } from "@ara-foundation/flarum-js-client";
 import { AraDiscussion, LungtaType } from "../types";
 
 const api = new FlarumApi(process.env.ARA_FORUM_API_ENDPOINT!, !process.env.NODE_ENV || process.env.NODE_END !== 'production');
@@ -25,7 +24,6 @@ export const init = async(): Promise<void> => {
  * @returns list of discussions
  */
 export const getDiscussions = async(discussionFilter?: DiscussionFilter): Promise<string|Discussions> => {
-    console.log(`Api at ${api.endpoint}`)
     const result = await FlarumDiscussions.getAll(api, discussionFilter);
     return result;
 }
@@ -37,44 +35,9 @@ export const getDiscussions = async(discussionFilter?: DiscussionFilter): Promis
  * @returns 
  */
 export const getDiscussionsByUrl = async(url: string): Promise<string|Discussions> => {
-    console.log(`[Models/forum/getDiscussionsByUrl] Todo: push the v0.0.6 of FlarumJsClient. Then use FlarumDiscussions.getAllByUrl.`);
-    const response = await fetch(url, {
-        headers: {
-            'Content-Type': `application/json`
-        },
-        method: "GET",
-    })
-
-    if (!response.ok) {
-        return `Response Status ${response.status}: ${response.statusText}`;
-    }
-
-    try {
-        const json = await response.json();
-        const reply = json as Discussions;
-        if (reply === undefined) {
-            throw `Failed to get Discussion`;
-        }
-
-        return reply;
-    } catch (e) {
-        return JSON.stringify(e);
-    }
+    return await FlarumDiscussions.getAllByUrl(url);
 }
 
-
-/**
- * Filters discussions by the given tag
- * @param discussions list of unfiltiered discussions
- * @param tagId the tag id
- */
-export const filterDiscussionsByTag = (discussions: DiscussionData[], tagId: string): DiscussionData[] => {
-    const filtered = discussions.filter((discussion) => {
-        return discussion.relationships.tags && discussion.relationships.tags?.data?.length > 0 && discussion.relationships.tags.data[0].id == tagId 
-    })
-
-    return filtered;
-}
 
 /**
  * Convert the Tag ID into the Lungta Type
@@ -82,17 +45,37 @@ export const filterDiscussionsByTag = (discussions: DiscussionData[], tagId: str
  */
 export const ConvertForumTagToLungtaType = (tagId: number | string): LungtaType => {
     if (tagId == process.env.ARA_LOGOS_TAG_ID!) {
-        return "logos"
+        return LungtaType.Logos
     } else if (tagId == process.env.ARA_STORY_TAG_ID!) {
-        return "story";
+        return LungtaType.Aurora;
     } else if (tagId == process.env.ARA_MAYDONE_TAG_ID!) {
-        return "maydone"
+        return LungtaType.Maydone
     } else if (tagId == process.env.ARA_ACT_TAG_ID!) {
-        return "act";
+        return LungtaType.ACT;
     } else {
-        return "sangha";
+        return LungtaType.Sangha;
     }
 }
+
+/**
+ * Returns a tag id for the lungta
+ * @param lungtaType
+ * @returns 
+ */
+export const convertLungtaTypeToForumTag = (lungtaType: LungtaType): string => {
+    if (lungtaType == LungtaType.Logos) {
+        return process.env.ARA_LOGOS_TAG_ID!
+    } else if (lungtaType == LungtaType.Aurora) {
+        return process.env.ARA_STORY_TAG_ID!;
+    } else if (lungtaType == LungtaType.Maydone) {
+        return process.env.ARA_MAYDONE_TAG_ID!
+    } else if (lungtaType == LungtaType.ACT) {
+        return process.env.ARA_ACT_TAG_ID!
+    } else {
+        return process.env.ARA_SANGHA_TAG_ID!;
+    }
+}
+
 
 export const FindIncludedUserById = (included: Discussions["included"], id: number | string): IncludedUser|undefined => {
     for (let element of included) {
@@ -123,30 +106,73 @@ export const FindIncludedPostById = (included: Discussions["included"], id: numb
  * @param discussions 
  * @param links 
  */
-export const ConvertForumToAraDiscussion = (discussions: DiscussionData[], included: Discussions["included"]): AraDiscussion[] => {
+export const convertForumDiscussionsToAraDiscussions = (discussions: DiscussionData[], included: Discussions["included"]): AraDiscussion[] => {
     const araDiscussions: AraDiscussion[] = [];
 
     for (let discussion of discussions) {
-        const araDiscussion: AraDiscussion = {
-            type: ConvertForumTagToLungtaType(discussion.relationships?.tags?.data[0].id!),
-            id: discussion.id!,
-            attributes: {
-                title: discussion.attributes.title,
-                slug: discussion.attributes.slug,
-                commentCount: discussion.attributes.commentCount,
-                participantCount: discussion.attributes.participantCount,
-                createdAt: discussion.attributes.createdAt,
-                lastPostedAt: discussion.attributes.lastPostedAt,
-                lastPostNumber: discussion.attributes.lastPostNumber
-            },
-            relationships: {
-                user: FindIncludedUserById(included, discussion.relationships.user?.data.id!),
-                firstPost: FindIncludedPostById(included, discussion.relationships.firstPost?.data.id!),
-            }
-        }
-
+        const araDiscussion = convertForumDiscussionToAraDiscussion(discussion, included);
         araDiscussions.push(araDiscussion);
     }
 
     return araDiscussions;
+}
+
+export const convertForumDiscussionToAraDiscussion = (discussion: DiscussionData, included: Discussions["included"]): AraDiscussion => {
+    const araDiscussion: AraDiscussion = {
+        type: ConvertForumTagToLungtaType(discussion.relationships?.tags?.data[0].id!),
+        id: discussion.id!,
+        attributes: {
+            title: discussion.attributes.title,
+            slug: discussion.attributes.slug,
+            commentCount: discussion.attributes.commentCount,
+            participantCount: discussion.attributes.participantCount,
+            createdAt: discussion.attributes.createdAt,
+            lastPostedAt: discussion.attributes.lastPostedAt,
+            lastPostNumber: discussion.attributes.lastPostNumber
+        },
+        relationships: {
+            user: FindIncludedUserById(included, discussion.relationships.user?.data.id!),
+            firstPost: FindIncludedPostById(included, discussion.relationships.firstPost?.data.id!),
+        }
+    }
+    return araDiscussion;
+}
+
+/**
+ * for title using `Sometimes, you let everything go...${new Date()}` will fail 
+ * since slug generation is impossible 
+ * @param token 
+ * @param title 
+ * @param content 
+ * @param tagId 
+ * @returns 
+ */
+export const createDiscussion = async (token: string, title: string, content: string, tagId: string): Promise<AraDiscussion|string> => {
+    const discussion: Discussion = {
+        data: {
+            type: "discussions",
+            attributes: {
+                title,
+                content,
+            },
+            relationships: {
+                tags: {
+                    data: [
+                        {
+                            type: "tags",
+                            id: tagId
+                        }
+                    ]
+                }
+            }
+        },
+    }
+    const tempApi = api.cloneWithToken(token);
+    const createdDiscussion = await FlarumDiscussions.create(tempApi, discussion)
+    if (typeof(createdDiscussion) === 'string') {
+        return createdDiscussion;
+    }
+    
+    const araDiscussion = convertForumDiscussionToAraDiscussion(createdDiscussion.data, createdDiscussion.included!);
+    return araDiscussion;
 }

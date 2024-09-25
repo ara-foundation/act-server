@@ -1,4 +1,4 @@
-import { IncludedPost, IncludedUser } from "@ara-foundation/flarum-js-client/dist/types"
+import { IncludedPost, IncludedUser } from "@ara-foundation/flarum-js-client"
 import { ObjectId } from "mongodb"
 
 export type Contract = {
@@ -103,7 +103,13 @@ export type Task = {
     images?: Link[]
 }
 
-export type LungtaType = "logos" | "story" | "maydone" | "act" | "sangha";
+export enum LungtaType {
+  Logos = "0-logos", 
+  Aurora = "1-aurora", 
+  Maydone = "2-maydone", 
+  ACT = "3-act", 
+  Sangha = "4-sangha"
+}
 
 export type AraUser = {
   id: number;

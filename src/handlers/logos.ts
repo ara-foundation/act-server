@@ -3,8 +3,8 @@
  * This module handles the Ara platform's idea hub.
  */
 import { Request, Response } from "express";
-import { ConvertForumToAraDiscussion, filterDiscussionsByTag, getDiscussions, getDiscussionsByUrl } from "../models/forum";
-import { DiscussionData } from "@ara-foundation/flarum-js-client/dist/types"
+import { convertForumDiscussionsToAraDiscussions, getDiscussions, getDiscussionsByUrl } from "../models/forum";
+import { LungtaType } from "../types";
 
 export type IdeasByUrl = {
     url: string;
@@ -16,14 +16,12 @@ export type IdeasByUrl = {
  * @param res 
  */
 export const onIdeas = async (req: Request, res: Response) => {
-    const discussions = await getDiscussions();
+    const discussions = await getDiscussions({tag: LungtaType.Logos});
     if (typeof(discussions) === 'string') {
         return res.status(400).json({message: discussions});
     }
 
-    const ideaDiscussions: DiscussionData[] = filterDiscussionsByTag(discussions.data, process.env.ARA_LOGOS_TAG_ID!);
-
-    const araDiscussions = ConvertForumToAraDiscussion(ideaDiscussions, discussions.included);
+    const araDiscussions = convertForumDiscussionsToAraDiscussions(discussions.data, discussions.included);
     
     res.json({
         link: discussions.links,
@@ -42,14 +40,12 @@ export const onIdeasByUserName = async (req: Request, res: Response) => {
     if (!userName) {
         return res.status(400).json({message: 'Invalid userName argument'});
     }
-    const discussions = await getDiscussions({userName});
+    const discussions = await getDiscussions({author: userName, tag: LungtaType.Logos});
     if (typeof(discussions) === 'string') {
         return res.status(400).json({message: discussions});
     }
 
-    const ideaDiscussions: DiscussionData[] = filterDiscussionsByTag(discussions.data, process.env.ARA_LOGOS_TAG_ID!);
-
-    const araDiscussions = ConvertForumToAraDiscussion(ideaDiscussions, discussions.included);
+    const araDiscussions = convertForumDiscussionsToAraDiscussions(discussions.data, discussions.included);
     
     res.json({
         link: discussions.links,
@@ -83,9 +79,7 @@ export const onIdeasByUrl = async (req: Request, res: Response) => {
         return res.status(400).json({message: discussions});
     }
 
-    const ideaDiscussions: DiscussionData[] = filterDiscussionsByTag(discussions.data, process.env.ARA_LOGOS_TAG_ID!);
-
-    const araDiscussions = ConvertForumToAraDiscussion(ideaDiscussions, discussions.included);
+    const araDiscussions = convertForumDiscussionsToAraDiscussions(discussions.data, discussions.included);
     
     res.json({
         link: discussions.links,

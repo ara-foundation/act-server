@@ -5,15 +5,16 @@ import cors from "cors";
 import { init as InitForumClient } from './models/forum';
 import { connectToDatabase  } from "./db";
 import { onProjects, onProject } from "./handlers/projects";
-import { onUser } from "./handlers/users";
+import { onUser, onUserCreate, onUserOld } from "./handlers/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./handlers/tasks";
-import { onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
-
+import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
+import bodyParser from 'body-parser';
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(bodyParser.json());
 app.use(cors());
 
 app.get("/", (_req: Request, res: Response) => {
@@ -46,20 +47,23 @@ app.get("/task/:id", onTask);
 // todo it must be from the indexer (envio)
 app.get("/add-nft-addon-task/:netId/:txid", onAddNftAddonTask);
 
-app.get("/user/:id", onUser);
-// create   -> returns a session token
+app.get("/users-old/:id", onUserOld);
+app.get("/users/:id", onUser);
+app.post("/users", onUserCreate);
 // login    -> returns a session token
 
 app.get("/logos/ideas", onIdeas);   // Return list of ideas
 app.get("/logos/ideas/:userName", onIdeasByUserName);
 app.post("/logos/ideas", onIdeasByUrl); // Return list of following ideas after GET /logos/ideas...
+app.post("/logos/idea", onIdeaCreate); // Create a new idea
 
 connectToDatabase()
 .then(async () => {
     try {
         await InitForumClient();
     } catch (e) {
-        process.exit(JSON.stringify(e));
+        console.error(e);
+        process.exit(1);
     }
         
     app.listen(port, () => {

@@ -113,6 +113,7 @@ export enum LungtaType {
 
 export type AraUser = {
   id: number;
+  token?: string;
   attributes: {
     username: string;
     displayName?: string;
@@ -145,3 +146,4 @@ export type AraDiscussion = {
         firstPost?: IncludedPost;
     };
 }
+

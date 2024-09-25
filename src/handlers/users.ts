@@ -4,6 +4,13 @@
 import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { collections  } from "../db";
+import { convertForumUserToAraUser, createSessionToken, createUser, getUser } from "../models/forum";
+
+export type UserCreate = {
+    username: string;
+    password: string;
+    email: string;
+}
 
 /**
  * GET /user/:id returns a user information
@@ -11,7 +18,7 @@ import { collections  } from "../db";
  * @param res 
  * @returns 
  */
-export const onUser = async (req: Request, res: Response) => {
+export const onUserOld = async (req: Request, res: Response) => {
     let objectId: ObjectId;
     try {
         objectId = new ObjectId(req.params.id);
@@ -30,4 +37,52 @@ export const onUser = async (req: Request, res: Response) => {
     } catch (e) {
         res.status(400).json({message: JSON.stringify(e)});
     }
+}
+
+/**
+ * GET /users/:id
+ * @param req 
+ * @param res 
+ * @returns 
+ */
+export const onUser = async(req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id) || id === 0) {
+        return res.status(400).json({message: `invalid user id`});
+    }
+    const user = await getUser(id);
+    if (typeof(user) === 'string') {
+        return res.status(400).json({message: user});
+    }
+
+    res.json(user.data)
+}
+
+/**
+ * POST /users creates a user
+ * @param req 
+ * @param res 
+ * @returns 
+ */
+export const onUserCreate = async(req: Request, res: Response) => {
+    const data = req.body as UserCreate;
+    if (!data) {
+        return res.status(400).json({message: 'missing UserCreate body parameters'});
+    }
+
+    const user = await createUser(data.username, data.password, data.email);
+    if (typeof(user) === 'string') {
+        return res.status(400).json({message: user});
+    }
+
+    const araUser = convertForumUserToAraUser(user.data);
+
+    const creationStatus = await createSessionToken(data.username, data.password);
+    if (typeof(creationStatus) === 'string') {
+        return res.status(400).json({message: `failed to create a session token, but user was registered: ${creationStatus}`})
+    }
+
+    araUser.token = creationStatus.token;
+
+    res.json(araUser)
 }

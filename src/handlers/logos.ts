@@ -3,11 +3,17 @@
  * This module handles the Ara platform's idea hub.
  */
 import { Request, Response } from "express";
-import { convertForumDiscussionsToAraDiscussions, getDiscussions, getDiscussionsByUrl } from "../models/forum";
+import { convertForumDiscussionsToAraDiscussions, createDiscussion, getDiscussions, getDiscussionsByUrl } from "../models/forum";
 import { LungtaType } from "../types";
 
 export type IdeasByUrl = {
     url: string;
+}
+
+export type IdeaCreate = {
+    token: string;
+    title: string;
+    content: string;
 }
 
 /**
@@ -85,4 +91,23 @@ export const onIdeasByUrl = async (req: Request, res: Response) => {
         link: discussions.links,
         data: araDiscussions,
     })
+}
+
+/**
+ * POST /logos/idea is used to create a new discussion
+ * @param req 
+ * @param res 
+ */
+export const onIdeaCreate = async (req: Request, res: Response) => {
+    const ideaCreateData = req.body as IdeaCreate;
+    if (!ideaCreateData) {
+        return res.status(400).json({message: 'missing IdeaCreate body parameters'});
+    }
+
+    const idea = await createDiscussion(ideaCreateData.token, ideaCreateData.title, ideaCreateData.content, process.env.ARA_LOGOS_TAG_ID!);
+    if (typeof(idea) === 'string') {
+        return res.status(400).json({message: idea})
+    }
+
+    return res.json(idea);
 }

@@ -1,10 +1,9 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { FlarumApi, FlarumDiscussions, Discussions, DiscussionData, IncludedUser, IncludedPost, DiscussionFilter, Discussion } from "@ara-foundation/flarum-js-client";
-import { AraDiscussion, LungtaType } from "../types";
+import { CreateSessionToken, FlarumApi, FlarumDiscussions, Discussions, DiscussionData, IncludedUser, IncludedPost, DiscussionFilter, Discussion, FlarumUsers, User, UserData } from "@ara-foundation/flarum-js-client";
+import { AraDiscussion, AraUser, LungtaType } from "../types";
 
 const api = new FlarumApi(process.env.ARA_FORUM_API_ENDPOINT!, !process.env.NODE_ENV || process.env.NODE_END !== 'production');
-console.log(`Api is loaded at ${api.endpoint}`)
 
 /**
  * Initialize the Flarum Client with the Admin Key.
@@ -12,11 +11,9 @@ console.log(`Api is loaded at ${api.endpoint}`)
 export const init = async(): Promise<void> => {
     const status = await api.authorize(parseInt(process.env.ARA_DEV_USER_ID!), process.env.ARA_DEV_API_KEY!);
     
-    if (status) {
+    if (typeof(status) === 'string') {
         throw status;
     }
-    console.log(`Api is succeed at ${api.endpoint}`)
-
 }
 
 /**
@@ -139,6 +136,31 @@ export const convertForumDiscussionToAraDiscussion = (discussion: DiscussionData
 }
 
 /**
+ * Convert the Forum's user into an Ara User
+ * @param user 
+ * @returns 
+ */
+export const convertForumUserToAraUser = (user: UserData): AraUser => {
+    const araUser: AraUser = {
+        id: user.id!,
+        attributes: {
+            username: user.attributes.username,
+            displayName: user.attributes.displayName,
+            avatarUrl: user.attributes.avatarUrl,
+            slug: user.attributes.slug,
+            discussionCount: user.attributes.discussionCount,
+            commentCount: user.attributes.commentCount,
+            lastSeenAt: user.attributes.lastSeenAt,
+            isEmailConfirmed: user.attributes.isEmailConfirmed,
+            email: user.attributes.email,
+            points: user.attributes.points,
+        },
+    }
+    return araUser;
+}
+
+
+/**
  * for title using `Sometimes, you let everything go...${new Date()}` will fail 
  * since slug generation is impossible 
  * @param token 
@@ -175,4 +197,48 @@ export const createDiscussion = async (token: string, title: string, content: st
     
     const araDiscussion = convertForumDiscussionToAraDiscussion(createdDiscussion.data, createdDiscussion.included!);
     return araDiscussion;
+}
+
+/**
+ * Returns the user from the server
+ * @param userId id in the forum
+ * @returns 
+ */
+export const getUser = async (userId: number): Promise<string|User> => {
+    const result = await FlarumUsers.get(api, userId);
+    return result;
+}
+
+/**
+ * create a new user with the given name, email and password
+ * @param username 
+ * @param password 
+ * @param email 
+ * @returns 
+ */
+export const createUser = async (username: string, password: string, email: string): Promise<string|User> => {
+    const user: User = {
+        data: {
+            attributes: {
+                username,
+                password,
+                email,
+            }
+        },
+        included: []
+    }
+    const result = await FlarumUsers.create(api, user);
+    return result;
+}
+
+/**
+ * Create a session token for the user.
+ * @param username 
+ * @param password 
+ * @returns 
+ */
+export const createSessionToken = async (username: string, password: string): Promise<string|CreateSessionToken> => {
+    const tempApi = api.cloneWithToken('');
+    const result = await tempApi.authorize(username, password);
+    return result;
 }

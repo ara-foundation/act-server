@@ -30,7 +30,7 @@ export const onIdeas = async (req: Request, res: Response) => {
     const araDiscussions = convertForumDiscussionsToAraDiscussions(discussions.data, discussions.included);
     
     res.json({
-        link: discussions.links,
+        links: discussions.links,
         data: araDiscussions,
     })
 }
@@ -54,7 +54,7 @@ export const onIdeasByUserName = async (req: Request, res: Response) => {
     const araDiscussions = convertForumDiscussionsToAraDiscussions(discussions.data, discussions.included);
     
     res.json({
-        link: discussions.links,
+        links: discussions.links,
         data: araDiscussions,
     })
 }
@@ -88,7 +88,7 @@ export const onIdeasByUrl = async (req: Request, res: Response) => {
     const araDiscussions = convertForumDiscussionsToAraDiscussions(discussions.data, discussions.included);
     
     res.json({
-        link: discussions.links,
+        links: discussions.links,
         data: araDiscussions,
     })
 }

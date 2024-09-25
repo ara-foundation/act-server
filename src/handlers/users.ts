@@ -86,3 +86,22 @@ export const onUserCreate = async(req: Request, res: Response) => {
 
     res.json(araUser)
 }
+
+/**
+ * POST /users/login creates a token that a person can use to interact
+ * @param req 
+ * @param res 
+ */
+export const onLogin = async(req: Request, res: Response) => {
+    const data = req.body as UserCreate;
+    if (!data) {
+        return res.status(400).json({message: 'missing UserCreate body parameters'});
+    }
+
+    const creationStatus = await createSessionToken(data.username, data.password);
+    if (typeof(creationStatus) === 'string') {
+        return res.status(400).json({message: `failed to create a session token, but user was registered: ${creationStatus}`})
+    }
+
+    return res.json(creationStatus);
+}

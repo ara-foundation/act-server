@@ -5,7 +5,7 @@ import cors from "cors";
 import { init as InitForumClient } from './models/forum';
 import { connectToDatabase  } from "./db";
 import { onProjects, onProject } from "./handlers/projects";
-import { onUser, onUserCreate, onUserOld } from "./handlers/users";
+import { onLogin, onUser, onUserCreate, onUserOld } from "./handlers/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./handlers/tasks";
 import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
 import bodyParser from 'body-parser';
@@ -50,7 +50,7 @@ app.get("/add-nft-addon-task/:netId/:txid", onAddNftAddonTask);
 app.get("/users-old/:id", onUserOld);
 app.get("/users/:id", onUser);
 app.post("/users", onUserCreate);
-// login    -> returns a session token
+app.post("/users/login", onLogin);
 
 app.get("/logos/ideas", onIdeas);   // Return list of ideas
 app.get("/logos/ideas/:userName", onIdeasByUserName);

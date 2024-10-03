@@ -4,14 +4,14 @@
 
 import { TransactionReceipt, JsonRpcProvider, LogDescription, Contract, Block } from "ethers";
 import { collections } from "./db";
-import { ProjectModel, TaskModel, UserModel } from "./models";
+import { ProjectModel, TaskModel, LinkedWalletModel } from "./models";
 import { WithId } from "mongodb";
 import NftAddonAbi from "../abi/nft_addon";
 import { CheckProjectParams, Link, Task, User } from "./types";
 
 export type TaskWithRawData = TaskModel & {
     project: ProjectModel[];
-    maintainerInfo: UserModel[];
+    maintainerInfo: LinkedWalletModel[];
 }
 
 export type TaskWithData = TaskModel & {

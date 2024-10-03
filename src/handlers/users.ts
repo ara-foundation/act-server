@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { collections  } from "../db";
 import { convertForumUserToAraUser, createSessionToken, createUser, getUser, validToken } from "../models/forum";
+import { LinkedWalletModel } from "../models";
 
 export type UserCreate = {
     username: string;
@@ -16,27 +17,80 @@ export type ValidToken = {
     token: string;
 }
 
+export type LinkWallet = ValidToken & {
+    walletAddress: string;
+}
+
 /**
- * GET /user/:id returns a user information
+ * GET /user/wallet/:username returns a user's wallet that he linked
  * @param req 
  * @param res 
  * @returns 
  */
-export const onUserOld = async (req: Request, res: Response) => {
-    let objectId: ObjectId;
-    try {
-        objectId = new ObjectId(req.params.id);
-    } catch (e) {
-        res.status(400).json({message: JSON.stringify(e)});
-        return;
+export const onLinkedWallet = async (req: Request, res: Response) => {
+    const username = req.params.username;
+    if (!username) {
+        return res.status(400).json({message: "invalid parameter"});
     }
 
     try {
-        const document = await collections.users?.findOne({"_id": objectId});
+        const document = await collections.linked_wallets?.findOne({"username": username});
         if (document) {
             res.json(document);
         } else {
-            res.status(404).json({message: "no project"})
+            res.json({walletAddress: ""})
+        }
+    } catch (e) {
+        res.status(400).json({message: JSON.stringify(e)});
+    }
+}
+
+/**
+ * POST /users/wallet/:username links user's wallet. If wallet already linked, then throws an error.
+ * @param req 
+ * @param res 
+ * @returns 
+ */
+export const onLinkedWalletCreate = async (req: Request, res: Response) => {
+    const username = req.params.username;
+    if (!username) {
+        return res.status(400).json({message: "invalid parameter"});
+    }
+
+    const data = req.body as LinkWallet;
+    if (!data) {
+        return res.status(400).json({message: 'missing LinkWallet body parameters'});
+    }
+
+    // validate
+    const valid = await validToken(data.token);
+    if (!valid) {
+        return res.status(401).json({message: 'Login first'});
+    }
+
+    try {
+        const document = await collections.linked_wallets?.findOne({"username": username});
+        if (document && document.walletAddress) {
+            return res.status(403).json({message: 'Wallet address already linked. Contact to support.'})
+        } else {
+            res.status(404).json({walletAddress: ""})
+        }
+    } catch (e) {
+        res.status(400).json({message: JSON.stringify(e)});
+    }
+
+    const doc: LinkedWalletModel = {
+        username: username,
+        walletAddress: data.walletAddress,
+        nonce: 0,
+      }
+
+    try {
+        const document = await collections.linked_wallets?.insertOne(doc);
+        if (document) {
+            res.json({walletAddress: data.walletAddress});
+        } else {
+            res.status(404).json({walletAddress: ""})
         }
     } catch (e) {
         res.status(400).json({message: JSON.stringify(e)});

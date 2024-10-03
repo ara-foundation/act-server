@@ -58,7 +58,7 @@ export const onTask = async (req: Request, res: Response) => {
             task.projectVideo = project.video
             task.projectDescription = project.description
 
-            const user = await collections.users?.findOne({"_id": task.maintainer});
+            const user = await collections.linked_wallets?.findOne({"_id": task.maintainer});
             if (!project) {
                 res.status(404).json({message: "no user"})
                 return;

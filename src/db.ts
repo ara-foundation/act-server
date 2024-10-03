@@ -1,10 +1,10 @@
 import * as mongoDB from "mongodb";
 import dotenv from "dotenv";
-import { UserModel, ProjectModel, TaskModel, UserScenarioModel } from "./models";
+import { LinkedWalletModel, ProjectModel, TaskModel, UserScenarioModel } from "./models";
 dotenv.config();
 
 export const collections: { 
-    users?: mongoDB.Collection<UserModel>,
+    linked_wallets?: mongoDB.Collection<LinkedWalletModel>,
     projects?: mongoDB.Collection<ProjectModel>
     tasks?: mongoDB.Collection<TaskModel>
     user_scenarios?: mongoDB.Collection<UserScenarioModel>
@@ -19,8 +19,8 @@ export async function connectToDatabase () {
         
     const db: mongoDB.Db = client.db(process.env.DB_NAME);
    
-    const usersCollection: mongoDB.Collection<UserModel> = db.collection(process.env.DB_COLLECTION_NAME_USERS!);
-    collections.users = usersCollection;
+    const usersCollection: mongoDB.Collection<LinkedWalletModel> = db.collection(process.env.DB_COLLECTION_NAME_USERS!);
+    collections.linked_wallets = usersCollection;
 
     const projectsCollection: mongoDB.Collection<ProjectModel> = db.collection(process.env.DB_COLLECTION_NAME_PROJECTS!);
     collections.projects = projectsCollection;
@@ -31,12 +31,11 @@ export async function connectToDatabase () {
     const userScenarioCollection: mongoDB.Collection<UserScenarioModel> = db.collection(process.env.DB_COLLECTION_NAME_USER_SCENARIOS!);
     collections.user_scenarios = userScenarioCollection;
 
-    collections.users.createIndex({walletAddress: 1});
-    collections.users.createIndex({email: 1});
-    collections.users.createIndex({firstname: 1}, {});
-    collections.users.createIndex({lastname: 1});
-    collections.users.createIndex({username: 1});
+    collections.linked_wallets.createIndex({walletAddress: 1});
+    collections.linked_wallets.createIndex({username: 1}, {unique: true});
+
     collections.projects.createIndex({name: 1}, {unique: true});
+
     collections.tasks.createIndex({maintainer: 1});
     collections.tasks.createIndex({tags: 1});
     collections.tasks.createIndex({categories: 1});

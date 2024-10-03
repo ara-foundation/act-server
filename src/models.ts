@@ -19,15 +19,11 @@ export class TaskModel {
         public images?: Link[],
     ) {}
 }
-export class UserModel {
+export class LinkedWalletModel {
     constructor(
         public walletAddress: string,
         public username: string,
-        public email: string,
-        public firstname: string,
-        public lastname: string,
         public nonce: number,
-        public id?: ObjectId,
     ) {}
 }
 

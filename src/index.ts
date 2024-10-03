@@ -5,7 +5,7 @@ import cors from "cors";
 import { init as InitForumClient } from './models/forum';
 import { connectToDatabase  } from "./db";
 import { onProjects, onProject } from "./handlers/projects";
-import { onLogin, onUser, onUserCreate, onUserOld, onValidToken } from "./handlers/users";
+import { onLinkedWallet, onLinkedWalletCreate, onLogin, onUser, onUserCreate, onValidToken } from "./handlers/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./handlers/tasks";
 import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
 import { onUserScenarioCreate } from "./handlers/aurora";
@@ -48,7 +48,8 @@ app.get("/task/:id", onTask);
 // todo it must be from the indexer (envio)
 app.get("/add-nft-addon-task/:netId/:txid", onAddNftAddonTask);
 
-app.get("/users-old/:id", onUserOld);
+app.get("/users/wallet/:username", onLinkedWallet);
+app.post("/users/wallet/:username", onLinkedWalletCreate);
 app.get("/users/:id", onUser);
 app.post("/users", onUserCreate);
 app.post("/users/login", onLogin);

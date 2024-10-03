@@ -242,3 +242,12 @@ export const createSessionToken = async (username: string, password: string): Pr
     const result = await tempApi.authorize(username, password);
     return result;
 }
+
+/**
+ * Validates the access token
+ * @param token User's token
+ * @returns boolean
+ */
+export const validToken = async(token: string): Promise<boolean> => {
+    return await FlarumUsers.canAccess(api, token);
+}

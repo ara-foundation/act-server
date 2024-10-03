@@ -30,7 +30,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@ara-foundation/flarum-js-client": "^0.0.11",
+    "@ara-foundation/flarum-js-client": "^0.0.12",
     "@moralisweb3/common-evm-utils": "^2.26.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

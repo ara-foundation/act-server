@@ -4,7 +4,7 @@
 import 'dotenv/config';
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
-import { UserCreate } from '../src/handlers/users';
+import { UserCreate, ValidToken } from '../src/handlers/users';
 import { AraDiscussion, AraUser, UserScenario } from '../src/types';
 import { CreateSessionToken } from '@ara-foundation/flarum-js-client';
 import { IdeaCreate } from '../src/handlers/logos';
@@ -198,6 +198,32 @@ const createUserScenario = async(body: UserScenarioCreate): Promise<string|AraDi
   }
 }
 
+const validToken = async(body: ValidToken): Promise<string|CreateSessionToken> => {
+  let urlToGo = url + '/users/valid-token';
+  console.log(`Url to go ${urlToGo}`);
+  const response = await fetch(urlToGo, {
+      headers: {
+          'Content-Type': `application/json`,
+      },
+      method: "POST",
+      body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    console.log(`Failed to request data from server`);
+    console.log(await response.json());
+    console.log(JSON.stringify(body));
+    return `Response Status ${response.status}: ${response.statusText}`;
+  }
+
+  try {
+      const json = await response.json();
+      return json as CreateSessionToken;
+  } catch (e) {
+      return JSON.stringify(e);
+  }
+}
+
 yargs(hideBin(process.argv))
   .command('create-user [username] [password] [email]', 'Registers the user on ara forum', (yargs) => {
     return yargs
@@ -281,6 +307,20 @@ yargs(hideBin(process.argv))
           console.log(`User Scenario post created!`);
           console.log(res);
       }
+  })
+  .command('valid-token [token]', 'Validate the given token', (yargs) => {
+    return yargs
+      .positional('token', {
+        describe: 'Access token of the user',
+      })
+  }, async (argv) => {
+    const res = await validToken(argv as ValidToken)
+    if (typeof(res) === 'string') {
+        console.error(res);
+    } else {
+        console.log(`Validation result`);
+        console.log(res);
+    }
   })
   .option('verbose', {
     alias: 'v',

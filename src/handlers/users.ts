@@ -4,12 +4,16 @@
 import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { collections  } from "../db";
-import { convertForumUserToAraUser, createSessionToken, createUser, getUser } from "../models/forum";
+import { convertForumUserToAraUser, createSessionToken, createUser, getUser, validToken } from "../models/forum";
 
 export type UserCreate = {
     username: string;
     password: string;
     email: string;
+}
+
+export type ValidToken = {
+    token: string;
 }
 
 /**
@@ -104,4 +108,20 @@ export const onLogin = async(req: Request, res: Response) => {
     }
 
     return res.json(creationStatus);
+}
+
+/**
+ * POST /users/valid-token
+ * @param req 
+ * @param res 
+ * @returns 
+ */
+export const onValidToken = async(req: Request, res: Response) => {
+    const data = req.body as ValidToken;
+    if (!data || !data.token) {
+        return res.status(400).json({message: 'missing ValidToken body parameters'});
+    }
+
+    const valid = await validToken(data.token);
+    res.json({valid: valid})
 }

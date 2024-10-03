@@ -172,6 +172,32 @@ const createIdea = async(body: IdeaCreate): Promise<string|CreateSessionToken> =
   }
 }
 
+const createUserScenario = async(body: UserScenarioCreate): Promise<string|AraDiscussion> => {
+  let urlToGo = url + '/aurora/user-scenario';
+  console.log(`Url to go ${urlToGo}`);
+  const response = await fetch(urlToGo, {
+      headers: {
+          'Content-Type': `application/json`,
+      },
+      method: "POST",
+      body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    console.log(`Failed to create user scenario`);
+      console.log(await response.json());
+      console.log(JSON.stringify(body));
+      return `Response Status ${response.status}: ${response.statusText}`;
+  }
+
+  try {
+      const json = await response.json();
+      return json as AraDiscussion;
+  } catch (e) {
+      return JSON.stringify(e);
+  }
+}
+
 yargs(hideBin(process.argv))
   .command('create-user [username] [password] [email]', 'Registers the user on ara forum', (yargs) => {
     return yargs
@@ -241,6 +267,20 @@ yargs(hideBin(process.argv))
         console.log(`Idea post created!`);
         console.log(res);
     }
+  })
+  .command('post-user-scenario', 'Post your idea on behalf of the user from .env', (yargs) => yargs, async (argv) => {
+      const userScenarioCreate: UserScenarioCreate = {
+        token: process.env.ARA_DEV_API_KEY!,
+        id: sampleIdeaId,
+        content: sampleUserScenario,
+      }
+      const res = await createUserScenario(userScenarioCreate)
+      if (typeof(res) === 'string') {
+          console.error(res);
+      } else {
+          console.log(`User Scenario post created!`);
+          console.log(res);
+      }
   })
   .option('verbose', {
     alias: 'v',

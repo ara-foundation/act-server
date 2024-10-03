@@ -5,12 +5,94 @@ import 'dotenv/config';
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 import { UserCreate } from '../src/handlers/users';
-import { AraUser } from '../src/types';
+import { AraDiscussion, AraUser, UserScenario } from '../src/types';
 import { CreateSessionToken } from '@ara-foundation/flarum-js-client';
 import { IdeaCreate } from '../src/handlers/logos';
+import { UserScenarioCreate } from '../src/handlers/aurora';
 
 const port = process.env.PORT || 3000;
 const url = `http://localhost:${port}`;
+
+const sampleIdeaId = 76;
+const sampleUserScenario: UserScenario = {
+  "title": "sample_idea_user_scenario",
+  "context": {
+      "user": "John Doe",
+      "background": "John is a busy professional who travels frequently for work.",
+      "steps": [
+          "John realizes he needs to book a flight for his next business trip.",
+          "He opens his laptop and searches for travel booking websites.",
+          "He lands on your travel booking website."
+      ]
+  },
+  "goals": [
+      "Book a flight for his upcoming business trip.",
+      "Find the best deal available.",
+      "Complete the booking process quickly and efficiently."
+  ],
+  "problems": [
+      {
+          "description": "John finds it difficult to compare prices across different airlines.",
+          "obstacles": [
+              "Time-consuming process of visiting multiple websites.",
+              "Confusing layouts and lack of clear price comparison tools."
+          ]
+      },
+      {
+          "description": "John often encounters hidden fees and charges during the booking process.",
+          "obstacles": [
+              "Lack of transparency in pricing.",
+              "Unexpected additional costs at checkout."
+          ]
+      }
+  ],
+  "user_motivations": [
+      "Save time by using a single platform for booking.",
+      "Save money by finding the best deals.",
+      "Avoid the hassle of hidden fees and charges."
+  ],
+  "personal_traits": [
+      "John is tech-savvy and prefers using online platforms for his travel needs.",
+      "He values efficiency and convenience in his daily tasks.",
+      "He is budget-conscious and always looks for the best value for his money."
+  ],
+  "relevant_habits_hobbies_beliefs": [
+      "John frequently travels for business and leisure.",
+      "He enjoys exploring new places and cultures.",
+      "He believes in the importance of planning ahead to avoid last-minute stress."
+  ],
+  "user_scenario_flow": [
+      {
+          "step": 1,
+          "action": "Visit the travel booking website.",
+          "description": "John navigates to the homepage of the travel booking website."
+      },
+      {
+          "step": 2,
+          "action": "Search for flights.",
+          "description": "John enters his travel details and searches for available flights."
+      },
+      {
+          "step": 3,
+          "action": "Compare prices.",
+          "description": "John uses the price comparison tool to find the best deal."
+      },
+      {
+          "step": 4,
+          "action": "Select a flight.",
+          "description": "John selects the flight that best fits his schedule and budget."
+      },
+      {
+          "step": 5,
+          "action": "Complete the booking process.",
+          "description": "John enters his personal and payment information to finalize the booking."
+      },
+      {
+          "step": 6,
+          "action": "Receive confirmation.",
+          "description": "John receives a confirmation email with his booking details."
+      }
+]};
 
 
 const createUser = async(body: UserCreate): Promise<string|AraUser> => {

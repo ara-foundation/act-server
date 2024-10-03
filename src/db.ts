@@ -1,12 +1,13 @@
 import * as mongoDB from "mongodb";
 import dotenv from "dotenv";
-import { UserModel, ProjectModel, TaskModel } from "./models";
+import { UserModel, ProjectModel, TaskModel, UserScenarioModel } from "./models";
 dotenv.config();
 
 export const collections: { 
     users?: mongoDB.Collection<UserModel>,
     projects?: mongoDB.Collection<ProjectModel>
     tasks?: mongoDB.Collection<TaskModel>
+    user_scenarios?: mongoDB.Collection<UserScenarioModel>
 } = {}
 
 export async function connectToDatabase () {
@@ -27,6 +28,9 @@ export async function connectToDatabase () {
     const taskCollection: mongoDB.Collection<TaskModel> = db.collection(process.env.DB_COLLECTION_NAME_TASKS!);
     collections.tasks = taskCollection;
 
+    const userScenarioCollection: mongoDB.Collection<UserScenarioModel> = db.collection(process.env.DB_COLLECTION_NAME_USER_SCENARIOS!);
+    collections.user_scenarios = userScenarioCollection;
+
     collections.users.createIndex({walletAddress: 1});
     collections.users.createIndex({email: 1});
     collections.users.createIndex({firstname: 1}, {});
@@ -39,6 +43,9 @@ export async function connectToDatabase () {
     collections.tasks.createIndex({title: 1});
     collections.tasks.createIndex({projectId: 1, checkProjectId: 1});
     collections.tasks.createIndex({sourceId: 1}, {unique: true});
+
+    collections.user_scenarios.createIndex({forum_discussion_id: 1}, {unique: true})
+    collections.user_scenarios.createIndex({forum_username: 1}, {unique: false})
 
     console.log(`[Server] Connected to ${db.databaseName} database.`);
  }

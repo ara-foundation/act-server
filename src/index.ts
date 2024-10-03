@@ -8,6 +8,7 @@ import { onProjects, onProject } from "./handlers/projects";
 import { onLogin, onUser, onUserCreate, onUserOld } from "./handlers/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./handlers/tasks";
 import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
+import { onUserScenarioCreate } from "./handlers/aurora";
 import bodyParser from 'body-parser';
 
 const app: Express = express();
@@ -56,6 +57,8 @@ app.get("/logos/ideas", onIdeas);   // Return list of ideas
 app.get("/logos/ideas/:userName", onIdeasByUserName);
 app.post("/logos/ideas", onIdeasByUrl); // Return list of following ideas after GET /logos/ideas...
 app.post("/logos/idea", onIdeaCreate); // Create a new idea
+
+app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenario
 
 connectToDatabase()
 .then(async () => {

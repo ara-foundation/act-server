@@ -147,3 +147,30 @@ export type AraDiscussion = {
     };
 }
 
+export type FlowStep = {
+  step: number;
+  action: string;
+  description: string;
+}
+
+export type UserScenarioProblem = {
+    description: string,
+    obstacles: string[]
+};
+
+export type UserScenarioContext = {
+  user: string;
+  background: string;
+  steps: string[];
+}
+
+export type UserScenario = {
+  title: string;
+  context: UserScenarioContext,
+  goals: string[],
+  problems: UserScenarioProblem[],
+  user_motivations: string[],
+  personal_traits: string[],
+  relevant_habits_hobbies_beliefs: string[],
+  user_scenario_flow: FlowStep[]
+}

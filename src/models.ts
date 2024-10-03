@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import { Link, Lungta, ProjectContracts, CheckProjectParams, TaskStatus, Token } from "./types";
+import { Link, Lungta, ProjectContracts, CheckProjectParams, TaskStatus, Token, UserScenario } from "./types";
 
 export class TaskModel {
     constructor(
@@ -50,4 +50,9 @@ export class ProjectModel {
         public lungta?: Lungta,
         public sourceCodes?: Array<Link>,
     ){}
+}
+
+export type UserScenarioModel = UserScenario & {
+    forum_discussion_id: number;
+    forum_username: string;
 }

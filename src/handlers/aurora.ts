@@ -72,6 +72,23 @@ ${flow}
 }
 
 /**
+ * GET /aurora/user-scenarios returns the list of the user scenarios
+ * @param req 
+ * @param res 
+ * @returns 
+ */
+export const onUserScenarios = async (req: Request, res: Response) => {
+    let cursor = collections.user_scenarios?.find({}).sort( { forum_discussion_id: -1 } );
+    let result = await cursor?.toArray();
+
+    if (result === undefined || result.length == 0) {
+        return res.json([]);
+    }
+    let rows = result as UserScenarioModel[];
+    return res.json(rows);
+}
+
+/**
  * /POST /aurora/user-scenario creates a new user scenario
  * @param req 
  * @param res 

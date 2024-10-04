@@ -8,7 +8,7 @@ import { onProjects, onProject } from "./handlers/projects";
 import { onLinkedWallet, onLinkedWalletCreate, onLogin, onUser, onUserCreate, onValidToken } from "./handlers/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./handlers/tasks";
 import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
-import { onUserScenarioCreate } from "./handlers/aurora";
+import { onUserScenarioCreate, onUserScenarios } from "./handlers/aurora";
 import bodyParser from 'body-parser';
 
 const app: Express = express();
@@ -60,6 +60,7 @@ app.get("/logos/ideas/:userName", onIdeasByUserName);
 app.post("/logos/ideas", onIdeasByUrl); // Return list of following ideas after GET /logos/ideas...
 app.post("/logos/idea", onIdeaCreate); // Create a new idea
 
+app.get("/aurora/user-scenarios", onUserScenarios); // Create a user scenario
 app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenario
 
 connectToDatabase()

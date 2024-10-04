@@ -116,6 +116,9 @@ export const onUserScenarioCreate = async (req: Request, res: Response) => {
     const model = data.content as UserScenarioModel;
     model.forum_username = post.relationships.user?.attributes.username!;
     model.forum_discussion_id = post.id;
+    model.forum_created_at = post.relationships.firstPost?.attributes.createdAt!;
+    model.forum_user_id = post.relationships.user?.id! as number;
+    model.logos_id = data.id;
 
     // put the data
     try {

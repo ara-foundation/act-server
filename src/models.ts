@@ -51,4 +51,7 @@ export class ProjectModel {
 export type UserScenarioModel = UserScenario & {
     forum_discussion_id: number;
     forum_username: string;
+    forum_user_id: number;
+    forum_created_at: string;
+    logos_id: number;
 }

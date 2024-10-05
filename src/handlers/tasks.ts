@@ -64,8 +64,8 @@ export const onTask = async (req: Request, res: Response) => {
                 return;
             }
             task.maintainerUserName = user?.username ? user?.username : ""
-            task.maintainerLastName = user?.lastname ? user?.lastname : ""
-            task.maintainerFirstName = user?.firstname ? user?.firstname : ""
+            task.maintainerFirstName = "";
+            task.maintainerLastName = "";
 
             res.json(task);
         } else {

@@ -63,6 +63,7 @@ app.post("/logos/idea", onIdeaCreate); // Create a new idea
 app.get("/aurora/user-scenarios", onUserScenarios); // Create a user scenario
 app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenario
 
+
 connectToDatabase()
 .then(async () => {
     try {

@@ -2,10 +2,10 @@
  * This module handles the users
  */
 import { Request, Response } from "express";
-import { ObjectId } from "mongodb";
 import { collections  } from "../db";
-import { convertForumUserToAraUser, createSessionToken, createUser, getUser, validToken } from "../models/forum";
+import { convertForumUserToAraUser, createSessionToken, createUser, getUser, userIdByToken, validToken } from "../models/forum";
 import { LinkedWalletModel } from "../models";
+import { CreateSessionToken } from "@ara-foundation/flarum-js-client";
 
 export type UserCreate = {
     username: string;
@@ -13,9 +13,7 @@ export type UserCreate = {
     email: string;
 }
 
-export type ValidToken = {
-    token: string;
-}
+export type ValidToken = CreateSessionToken;
 
 export type LinkWallet = ValidToken & {
     walletAddress: string;
@@ -178,4 +176,40 @@ export const onValidToken = async(req: Request, res: Response) => {
 
     const valid = await validToken(data.token);
     res.json({valid: valid})
+}
+
+/**
+ * POST /users/thirdweb-validate returns a validated thirdweb tokens
+ * @param req 
+ * @param res 
+ */
+export const onThirdwebValidate = async(req: Request, res: Response) => {
+    console.log("Thirdweb validate:");
+    console.log(req.body);
+    const { payload: username, encryptionKey: token } = req.body;
+    if (!username)
+      return res.status(401).json({ message: "Invalid public identifier" });
+    if (!token) {
+        return res.status(401).json({message: "Invalid encryption key"})
+    }
+   
+    // You would write your own logic here to verify the payload here
+    const userId = await userIdByToken(token);
+    if (userId === undefined) {
+        return res.status(500).json({message: "Invalid token"});
+    }
+    const user = await getUser(userId);
+    if (typeof(user) === "string") {
+        return res.status(500).json({message: user});
+    }
+
+    if (user.data.attributes.username !== username) {
+        console.log(`User from forum: ${user.data.attributes.username} while access is ${username}`);
+        return res.status(500).json({message: `Invalid username`});
+    }
+   
+    // Once the user is successfully verified, you can return the following field
+    return res.send({
+      userId: username,
+    });
 }

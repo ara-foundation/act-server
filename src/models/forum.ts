@@ -1,9 +1,30 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { CreateSessionToken, FlarumApi, FlarumDiscussions, Discussions, DiscussionData, IncludedUser, IncludedPost, DiscussionFilter, Discussion, FlarumUsers, User, UserData } from "@ara-foundation/flarum-js-client";
+import { CreateSessionToken, FlarumApi, FlarumDiscussions, Discussions, DiscussionData, IncludedUser, IncludedPost, DiscussionFilter, Discussion, FlarumUsers, User, UserData, Links } from "@ara-foundation/flarum-js-client";
 import { AraDiscussion, AraUser, LungtaType } from "../types";
+import { boolean } from "yargs";
 
 const api = new FlarumApi(process.env.ARA_FORUM_API_ENDPOINT!, !process.env.NODE_ENV || process.env.NODE_END !== 'production');
+
+export type AccessToken = {
+    type: "access-tokens",
+    id: string | number,
+    attributes: {
+        userId: number,
+        createdAt: string,
+        lastActivityAt: string,
+        isCurrent: boolean,
+        isSessionToken: boolean,
+        title?: string,
+        lastIpAddress?: string,
+        device?: string
+      }
+}
+
+export type AccessTokens = {
+    links: Links,
+    data: AccessToken[],
+}
 
 /**
  * Initialize the Flarum Client with the Admin Key.
@@ -250,4 +271,39 @@ export const createSessionToken = async (username: string, password: string): Pr
  */
 export const validToken = async(token: string): Promise<boolean> => {
     return await FlarumUsers.canAccess(api, token);
+}
+
+/**
+ * Returns a user id by the given token. If no user found, then returns undefined.
+ * @param token session token
+ */
+export const userIdByToken = async(token: string): Promise<number|undefined> => {
+    let url = `${api.endpoint}/access-tokens`;
+    var tempApi = api.cloneWithToken(token);
+    
+    while(true) {
+        const response = await tempApi.getFetch(url);
+
+        if (typeof(response) === 'string') {
+            return undefined;
+        }
+
+        var accessTokens = response as AccessTokens;
+        if (!accessTokens.data || accessTokens.data.length == 0) {
+            return undefined;
+        }
+        for (let accessToken of accessTokens.data) {
+            if (accessToken.attributes.isCurrent) {
+                return accessToken.attributes.userId;
+            }
+        }
+
+        if (accessTokens.links.next) {
+            url = accessTokens.links.next;
+        } else {
+            break;
+        }
+    }
+
+    return undefined;
 }

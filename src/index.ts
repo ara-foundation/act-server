@@ -5,7 +5,7 @@ import cors from "cors";
 import { init as InitForumClient } from './models/forum';
 import { connectToDatabase  } from "./db";
 import { onProjects, onProject } from "./handlers/projects";
-import { onLinkedWallet, onLinkedWalletCreate, onLogin, onUser, onUserCreate, onValidToken } from "./handlers/users";
+import { onLinkedWallet, onLinkedWalletCreate, onLogin, onThirdwebValidate, onUser, onUserCreate, onValidToken } from "./handlers/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./handlers/tasks";
 import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
 import { onUserScenarioCreate, onUserScenarios } from "./handlers/aurora";
@@ -54,6 +54,7 @@ app.get("/users/:id", onUser);
 app.post("/users", onUserCreate);
 app.post("/users/login", onLogin);
 app.post("/users/valid-token", onValidToken);
+app.post("/users/thirdweb-validate", onThirdwebValidate);
 
 app.get("/logos/ideas", onIdeas);   // Return list of ideas
 app.get("/logos/ideas/:userName", onIdeasByUserName);

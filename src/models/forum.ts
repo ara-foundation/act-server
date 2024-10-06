@@ -289,9 +289,16 @@ export const validToken = async(token: string): Promise<boolean> => {
  * @param token session token
  */
 export const userIdByToken = async(token: string): Promise<number|undefined> => {
-    let url = `${api.endpoint}/access-tokens`;
-    var tempApi = api.cloneWithToken(token);
+    var tempApi = new FlarumApi(process.env.ARA_FORUM_API_ENDPOINT!, !process.env.NODE_ENV || process.env.NODE_END !== 'production');
+    var authResult = await tempApi.authorize(10, token);
+    if (typeof(authResult) === 'string') {
+        console.error(authResult);
+        return undefined;
+    }
+    let url = `${tempApi.endpoint}/access-tokens`;
     
+    let lastUserId: number | undefined = undefined;
+
     while(true) {
         const response = await tempApi.getFetch(url);
 
@@ -303,6 +310,7 @@ export const userIdByToken = async(token: string): Promise<number|undefined> => 
         if (!accessTokens.data || accessTokens.data.length == 0) {
             return undefined;
         }
+        lastUserId = accessTokens.data[accessTokens.data.length - 1].attributes.userId as number;
         for (let accessToken of accessTokens.data) {
             if (accessToken.attributes.isCurrent) {
                 return accessToken.attributes.userId;
@@ -316,5 +324,5 @@ export const userIdByToken = async(token: string): Promise<number|undefined> => 
         }
     }
 
-    return undefined;
+    return lastUserId;
 }

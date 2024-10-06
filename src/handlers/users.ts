@@ -182,11 +182,9 @@ export const onValidToken = async(req: Request, res: Response) => {
 export const onThirdwebValidate = async(req: Request, res: Response) => {
     console.log("Thirdweb validate:");
     console.log(req.body);
-    const { payload: username, encryptionKey: token } = req.body;
-    if (!username)
-      return res.status(401).json({ message: "Invalid public identifier" });
+    const { payload: token } = req.body;
     if (!token) {
-        return res.status(401).json({message: "Invalid encryption key"})
+        return res.status(401).json({message: "Invalid payload"})
     }
    
     // You would write your own logic here to verify the payload here
@@ -199,13 +197,8 @@ export const onThirdwebValidate = async(req: Request, res: Response) => {
         return res.status(500).json({message: user});
     }
 
-    if (user.data.attributes.username !== username) {
-        console.log(`User from forum: ${user.data.attributes.username} while access is ${username}`);
-        return res.status(500).json({message: `Invalid username`});
-    }
-   
     // Once the user is successfully verified, you can return the following field
     return res.send({
-      userId: username,
+      userId: user.data.attributes.username,
     });
 }

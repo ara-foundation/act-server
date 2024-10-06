@@ -131,16 +131,12 @@ export const onUserCreate = async(req: Request, res: Response) => {
         return res.status(400).json({message: user});
     }
 
-    const araUser = convertForumUserToAraUser(user.data);
-
     const creationStatus = await createSessionToken(data.username, data.password);
     if (typeof(creationStatus) === 'string') {
         return res.status(400).json({message: `failed to create a session token, but user was registered: ${creationStatus}`})
     }
 
-    araUser.token = creationStatus.token;
-
-    res.json(araUser)
+    res.json(creationStatus)
 }
 
 /**

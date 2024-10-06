@@ -26,6 +26,10 @@ export type AccessTokens = {
     data: AccessToken[],
 }
 
+export type CreateSessionTokenWithUserId = CreateSessionToken & {
+    user_id: number,
+};
+
 /**
  * Initialize the Flarum Client with the Admin Key.
  */
@@ -258,10 +262,17 @@ export const createUser = async (username: string, password: string, email: stri
  * @param password 
  * @returns 
  */
-export const createSessionToken = async (username: string, password: string): Promise<string|CreateSessionToken> => {
+export const createSessionToken = async (username: string, password: string): Promise<string|CreateSessionTokenWithUserId> => {
     const tempApi = api.cloneWithToken('');
     const result = await tempApi.authorize(username, password);
-    return result;
+    if (typeof(result) === 'string') {
+        return result;
+    }
+    
+    return {
+        token: result.token,
+        user_id: tempApi.getUserId(),
+    }
 }
 
 /**

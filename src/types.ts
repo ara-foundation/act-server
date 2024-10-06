@@ -174,3 +174,38 @@ export type UserScenario = {
   relevant_habits_hobbies_beliefs: string[],
   user_scenario_flow: FlowStep[]
 }
+
+export type ForumParams = {
+  forum_username: string;
+  forum_user_id: number;
+  forum_discussion_id: number;
+  forum_created_at: string;
+}
+
+export type Plan = ForumParams & {
+  //
+  // Generic data
+  // 
+  leader_username: string; // the main maintainer
+  leader_user_id: number; // the main maintainer
+  project_name: string; // how the project is named
+  logos_id: number; // the id of the logos
+  user_scenario_id: number; // the matching user scenario
+
+  // 
+  // Tech stack
+  // 
+  tech_stack: string;
+  cost_usd: number;
+  duration: number; // in days
+  source_code_url: string;
+  test_url?: string;
+
+  // 
+  // Sangha parameter
+  // 
+  token_name: string;
+  token_symbol: string;
+  token_max_supply: string;
+  sangha_welcome: string; // the two sentences to interact other people
+}

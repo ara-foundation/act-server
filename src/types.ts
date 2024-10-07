@@ -193,7 +193,7 @@ export type Plan = ForumParams & {
   user_scenario_id: number; // the matching user scenario
 
   // 
-  // Tech stack
+  // ACT Parameters for the snagha
   // 
   tech_stack: string;
   cost_usd: number;

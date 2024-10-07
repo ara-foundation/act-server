@@ -2,9 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 import { CreateSessionToken, FlarumApi, FlarumDiscussions, Discussions, DiscussionData, IncludedUser, IncludedPost, DiscussionFilter, Discussion, FlarumUsers, User, UserData, Links } from "@ara-foundation/flarum-js-client";
 import { AraDiscussion, AraUser, LungtaType } from "../types";
-import { boolean } from "yargs";
 
-const api = new FlarumApi(process.env.ARA_FORUM_API_ENDPOINT!, !process.env.NODE_ENV || process.env.NODE_END !== 'production');
+const api = new FlarumApi(process.env.ARA_FORUM_API_ENDPOINT!, process.env.NODE_ENV !== undefined && process.env.NODE_END !== 'production');
 
 export type AccessToken = {
     type: "access-tokens",

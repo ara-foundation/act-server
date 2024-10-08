@@ -88,7 +88,7 @@ export const createPlan = async (data: PlanModel): Promise<PlanModel|string> => 
 export const updatePlan = async(data: PlanModel): Promise<string|undefined> => {
     // put the data
     try {
-        const dbResult = await collections.plans?.updateOne({_id: data._id}, data);
+        const dbResult = await collections.plans?.replaceOne({_id: data._id}, data);
 
         if (!dbResult) {
             return `Failed to insert the user scenario in the database`;

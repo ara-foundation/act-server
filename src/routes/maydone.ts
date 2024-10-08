@@ -1,15 +1,15 @@
-import { ObjectId } from "mongodb";
 import { collections } from "../db";
-import { PlanModel, ProjectV1Model, UserScenarioModel } from "../models";
-import { createDiscussion } from "../models/forum";
+import { PlanModel, ProjectV1Model } from "../models";
+import { createDiscussion, userIdByToken, validToken } from "../models/forum";
 import { getPlanByProjectId, updatePlan } from "../models/maydone";
-import { Plan, ProjectV1 } from "../types";
+import { Plan } from "../types";
 import { Request, Response } from "express";
-import { getProjectV1 } from "../models/projects";
+import { getProjectV1ByNetwork } from "../models/projects";
 
 export type AddWelcomePage = {
     token: string;
-    projectId: string;
+    projectId: number;
+    networkId: number;
     content: string;
 }
 
@@ -67,21 +67,38 @@ export const onAddWelcome = async (req: Request, res: Response) => {
         return res.status(400).json({message: 'missing AddWelcomePage body parameters'});
     }
 
-    const plan = await getPlanByProjectId(new ObjectId(data.projectId));
+    const valid = await validToken(data.token);
+    if (!valid) {
+        return res.status(401).json({message: 'invalid user'});
+    }
+
+    const userId = await userIdByToken(data.token);
+    if (userId === undefined || userId <= 0) {
+        return res.status(401).json({message: 'no user found in session'});
+    }
+
+    const projectV1 = await getProjectV1ByNetwork(data.projectId, data.networkId);
+    if (projectV1 === undefined) {
+        return res.status(404).json(`project ${data.projectId} on ${data.networkId} network not found`);
+    }
+
+    if (typeof(projectV1) === 'string') {
+        return res.status(400).json({message: `Failed to get project for ${data.projectId} on ${data.networkId} network: ${projectV1}`});
+    }
+
+    if (!projectV1.leader || projectV1.leader.userId !== userId) {
+        return res.status(400).json({message: 'only leader can call it'});
+    }
+
+    const plan = await getPlanByProjectId(projectV1._id);
     if (typeof plan === 'string') {
         return res.status(400).json({message: `Failed to get plan for ${data.projectId}: ${plan}`});
     }
     
+    if (plan.sangha_welcome && plan.sangha_welcome.length > 0) {
+        return res.status(500).json({message: 'already added a welcome page'});
+    }
     plan.sangha_welcome = data.content;
-
-    const projectV1 = await getProjectV1(plan.project_id);
-    if (projectV1 === undefined) {
-        return res.json(`binded project for the plan not found: ${JSON.stringify(plan)}`);
-    }
-
-    if (typeof(projectV1) === 'string') {
-        return res.status(400).json({message: `Failed to get project for ${data.projectId}`});
-    }
 
     let content = planToMarkdown(projectV1, plan);
     if (!content) {
@@ -104,5 +121,6 @@ export const onAddWelcome = async (req: Request, res: Response) => {
     if (typeof(updated) === 'string') {
         return res.status(400).json({message: `failed to update plan: ${updated}`});
     }
+
     return res.json(plan);
 }

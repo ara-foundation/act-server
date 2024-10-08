@@ -14,12 +14,11 @@ import {
   Project_SetInitialLeader_Data,
   Treasury_SetProject_Data,
 } from './indexer_types'
-import { addIndexTimestamps, getIndexes, getIndexTimestamps, LastIndexes, updateIndexTimestamps } from './indexer/index'
+import { getIndexes, LastIndexes, updateIndexTimestamps } from './indexer/index'
 import { createCollateral, getCollateral, updateCollateral } from './indexer/collateral'
-import { ActModel, CollateralModel, EventTypes, IndexedEventType, LastIndexTimestamp, LastIndexTimestampType, LinkedWalletModel, ProjectV1Model, TaskV1Model, UserScenarioModel } from './models'
-import { formatUnits } from 'ethers'
+import { ActModel, CollateralModel, IndexedEventType, LinkedWalletModel, ProjectV1Model, TaskV1Model, UserScenarioModel } from './models'
 import { getTaskTime, symbolOf } from './blockchain'
-import { createProjectV1, getProjectV1ByNetwork, updateProjectV1 } from './models/projects'
+import { createProjectV1, getProjectV1ByCheck, getProjectV1ByNetwork, updateProjectV1 } from './models/projects'
 import { getLinkWalletByWalletAddress } from './models/users'
 import { AraDiscussion, LinkedWallet, LungtaLinks } from './types'
 import { ObjectId, WithId } from 'mongodb'
@@ -33,6 +32,13 @@ const graphqlClient = new Client({
   url: process.env.INDEXER_URL!,
   exchanges: [cacheExchange, fetchExchange],
 })
+
+// Memory Cache, the Events in the same log as NewProject comes first.
+// However they will be active only if NewProject is called.
+var inMemoryTreasurySetProjects: {[key: string]: Treasury_SetProject_Data} = {};
+var inMemoryProjectSetInitialLeader: {[key: string]: Project_SetInitialLeader_Data} = {};
+var inMemoryProjectSetSangha: {[key: string]: Project_SetSangha_Data} = {};
+var inMemoryTreasuryMint: {[key: string]: Treasury_Mint_Data} = {};
 
 type Events = {
   // Ara Sangha operations: such as adding collateral support in treasury
@@ -145,11 +151,8 @@ const job = Cron(
         lastIndex = event.db_write_timestamp
       }
 
-      console.log(`Last index: ${lastIndex}, last indexes timestamp: ${lastIndexes[eventType]?.db_timestamp}`);
-
       if (lastIndex.length > 0 && lastIndex !== lastIndexes[eventType]?.db_timestamp) {
         lastIndexes[eventType]!.db_timestamp = lastIndex;
-        console.log(`Updating the index to ${lastIndexes[eventType]!.db_timestamp}`);
         const updated = await updateIndexTimestamps(lastIndexes[eventType]!)
         if (!updated) {
           console.error(`Failed to update timestamp ${eventType}`)
@@ -163,7 +166,7 @@ const job = Cron(
 )
 
 export const startTracking = async () => {
-  console.log(`Starting a cron jobs for indexing smartcontracts`)
+  console.log(`[Scheduler] Starting an indexer of smartcontract events`)
   let lastIndexesFromDb = await getIndexes();
   if (typeof lastIndexesFromDb === 'string') {
     throw `Failed to get last indexes: ${lastIndexesFromDb}`
@@ -196,34 +199,6 @@ const fetchFromGraphql = async (): Promise<Events | undefined> => {
         db_write_timestamp
     }
 
-    TreasuryV1_Mint(
-        where: { db_write_timestamp: { _gt: "${lastIndexes.TreasuryV1_Mint!.db_timestamp}" }}
-        limit: 50
-        order_by: { db_write_timestamp: asc }
-      ) {
-        collateralAmount
-        ownershipAmount
-        projectId_
-        usdAmount
-        collateral
-        id
-        ownershipToken
-        to
-        db_write_timestamp
-    }
-
-    TreasuryV1_SetProject(
-        where: { db_write_timestamp: { _gt: "${lastIndexes.TreasuryV1_SetProject!.db_timestamp}" }}
-        limit: 50
-        order_by: { db_write_timestamp: asc }
-      ) {
-        tokenAmount
-        usdAmount
-        projectId
-        id
-        db_write_timestamp
-    }
-  
     ProjectV1_NewProject(
         where: { db_write_timestamp: { _gt: "${lastIndexes.ProjectV1_NewProject!.db_timestamp}" } }
         limit: 50
@@ -268,6 +243,34 @@ const fetchFromGraphql = async (): Promise<Events | undefined> => {
         initialLeader
     }
 
+    TreasuryV1_SetProject(
+        where: { db_write_timestamp: { _gt: "${lastIndexes.TreasuryV1_SetProject!.db_timestamp}" }}
+        limit: 50
+        order_by: { db_write_timestamp: asc }
+      ) {
+        tokenAmount
+        usdAmount
+        projectId
+        id
+        db_write_timestamp
+    }
+
+    TreasuryV1_Mint(
+        where: { db_write_timestamp: { _gt: "${lastIndexes.TreasuryV1_Mint!.db_timestamp}" }}
+        limit: 50
+        order_by: { db_write_timestamp: asc }
+      ) {
+        collateralAmount
+        ownershipAmount
+        projectId_
+        usdAmount
+        collateral
+        id
+        ownershipToken
+        to
+        db_write_timestamp
+    }
+  
     ActV1_NewTask(
         where: { db_write_timestamp: { _gt: "${lastIndexes.ActV1_NewTask!.db_timestamp}" } }
         limit: 50
@@ -353,9 +356,6 @@ const processCollateralInit = async (
         return;
     }
 
-    //timestamp: Math.floor(new Date(startMinting.db_write_timestamp).getTime() / 1000),
-    //depositAmount: parseFloat(formatUnits(startMinting.usdcAmount, stableCoinDecimals(chainId))).toString(), // 0 or 1
-
     const symbol = await symbolOf(data.token, networkId);
 
     let dataToAdd: CollateralModel = {
@@ -419,15 +419,16 @@ const processCollateralAction = async (
  */
 const processSetProjectInTreasury = async (data: Treasury_SetProject_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = data.projectId
+  const projectId = parseInt(data.projectId)
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (cashed === undefined) {
-    console.log(`processSetProjectInTreasury: Project ${projectId} on ${networkId} network already parsed skip it`)
+    console.error(`processSetProjectInTreasury: Project ${projectId} on ${networkId} network not found, skipping max supply`)
+    inMemoryTreasurySetProjects[`${networkId}_${projectId}`] = data;
     return undefined
   }
   if (typeof (cashed) === 'string') {
-    console.log(`processSetProjectInTreasury: Project ${projectId} on ${networkId} fetch failed: ${cashed}`);
+    console.error(`processSetProjectInTreasury: Project ${projectId} on ${networkId} fetch failed: ${cashed}`);
     return;
   }
   let projectV1 = cashed as WithId<ProjectV1Model>;
@@ -451,11 +452,12 @@ const processSetProjectInTreasury = async (data: Treasury_SetProject_Data): Prom
  */
 const processSetProjectLeader = async (data: Project_SetInitialLeader_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = data.projectId
+  const projectId = parseInt(data.projectId)
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (cashed === undefined) {
-    console.log(`processSetProjectLeader: Project ${projectId} on ${networkId} network already parsed skip it`)
+    console.log(`processSetProjectLeader: Project ${projectId} on ${networkId} network not found`)
+    inMemoryProjectSetInitialLeader[`${networkId}_${projectId}`] = data;
     return undefined
   }
   if (typeof (cashed) === 'string') {
@@ -493,11 +495,12 @@ const processSetProjectLeader = async (data: Project_SetInitialLeader_Data): Pro
  */
 const processSetProjectSangha = async (data: Project_SetSangha_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = data.projectId
+  const projectId = parseInt(data.projectId)
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (cashed === undefined) {
-    console.log(`processSetProjectSangha: Project ${projectId} on ${networkId} network already parsed skip it`)
+    console.log(`processSetProjectSangha: Project ${projectId} on ${networkId} network not found skip it`)
+    inMemoryProjectSetSangha[`${networkId}_${projectId}`] = data;
     return undefined
   }
   if (typeof (cashed) === 'string') {
@@ -510,8 +513,8 @@ const processSetProjectSangha = async (data: Project_SetSangha_Data): Promise<un
   projectV1.sangha!.check = data.project_2;
 
   projectV1.sangha!.ownershipSymbol = await symbolOf(projectV1.sangha!.ownership!, networkId);
-  projectV1.sangha!.maintainer = `${projectV1.sangha!.ownershipSymbol}m`;
-  projectV1.sangha!.check = `${projectV1.sangha!.ownershipSymbol}c`;
+  projectV1.sangha!.maintainerSymbol = `${projectV1.sangha!.ownershipSymbol}m`;
+  projectV1.sangha!.checkSymbol = `${projectV1.sangha!.ownershipSymbol}c`;
 
   // We will skip the sangha post
   const updated = await updateProjectV1(projectV1);
@@ -534,7 +537,7 @@ const processSetProjectSangha = async (data: Project_SetSangha_Data): Promise<un
  */
 const processNewProject = async (data: Project_NewProject_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = data.projectId
+  const projectId = parseInt(data.projectId)
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (typeof(cashed) === 'string') {
@@ -550,15 +553,17 @@ const processNewProject = async (data: Project_NewProject_Data): Promise<undefin
   const lungtaLinks: LungtaLinks = {};
 
   const logos: AraDiscussion = JSON.parse(data.project_2.replace(/&amp;/g, '&')
-  .replace(/&lt;/g, '<')
-  .replace(/&gt;/g, '>')
-  .replace(/&quot;/g, '"')
-  .replace(/&#39;/g, "'"));
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+  );
   const aurora: UserScenarioModel = JSON.parse(data.project_3.replace(/&amp;/g, '&')
-  .replace(/&lt;/g, '<')
-  .replace(/&gt;/g, '>')
-  .replace(/&quot;/g, '"')
-  .replace(/&#39;/g, "'"));
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+  );
   lungtaLinks.aurora_id = new ObjectId(aurora._id);
   lungtaLinks.logos_id = logos.id;
 
@@ -613,6 +618,25 @@ const processNewProject = async (data: Project_NewProject_Data): Promise<undefin
     console.error(`Failed to update project ${JSON.stringify(projectV1)}: ${updated}`);
   }
 
+  // If we have in memory parameters of project that came earlier, then add them.
+  const key = `${networkId}_${projectId}`
+  if (inMemoryProjectSetInitialLeader[key] !== undefined) {
+    await processSetProjectLeader(inMemoryProjectSetInitialLeader[key])
+    delete inMemoryProjectSetInitialLeader[key]
+  }
+  if (inMemoryProjectSetSangha[key] !== undefined) {
+    await processSetProjectSangha(inMemoryProjectSetSangha[key])
+    delete inMemoryProjectSetSangha[key]
+  }
+  if (inMemoryTreasurySetProjects[key] !== undefined) {
+    await processSetProjectInTreasury(inMemoryTreasurySetProjects[key])
+    delete inMemoryTreasurySetProjects[key]
+  }
+  if (inMemoryTreasuryMint[key] !== undefined) {
+    await processMintOwnership(inMemoryTreasuryMint[key])
+    delete inMemoryTreasuryMint[key]
+  }
+
   return undefined;
 }
 
@@ -627,12 +651,13 @@ const processMintOwnership = async (data: Treasury_Mint_Data): Promise<boolean> 
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (typeof(cashed) === 'string') {
-    console.error(`Project ${projectId} on ${networkId} network not found`);
+    console.error(`processMintOwnership: Project ${projectId} on ${networkId} network error: ${cashed}`);
     return false;
   }
 
   if (cashed === undefined) {
-    console.error(`Project ${projectId} on ${networkId} netwok not found. Skip it.`)
+    console.error(`processMintOwnership: Project ${projectId} on ${networkId} netwok not found. Skip it.`)
+    inMemoryTreasuryMint[`${networkId}_${projectId}`] = data;
     return true
   }
   const projectV1 = cashed as WithId<ProjectV1Model>
@@ -654,11 +679,7 @@ const processMintOwnership = async (data: Treasury_Mint_Data): Promise<boolean> 
     return false;
   }
 
-  console.log(`Let's parse the collateral data: ${data.collateralAmount} decimals ${collateral.decimals} bigint ${BigInt(data.collateralAmount)}`);
-
-  const ownershipAmount = parseFloat(formatUnits(data.ownershipAmount, 18));
-
-  projectV1.sangha!.ownership_minted = (BigInt(projectV1.sangha!.ownership_minted!) + BigInt(ownershipAmount)).toString()
+  projectV1.sangha!.ownership_minted = (BigInt(projectV1.sangha!.ownership_minted!) + BigInt(data.ownershipAmount)).toString()
   collateral.araTreasuryBalance = (BigInt(collateral.araTreasuryBalance) + BigInt(data.collateralAmount)).toString();
 
   const updated = await updateProjectV1(projectV1)
@@ -688,6 +709,15 @@ const processMintOwnership = async (data: Treasury_Mint_Data): Promise<boolean> 
  */
 const processCashierRedeem = async (data: Cashier_Redeem_Data): Promise<boolean> => {
   const networkId = networkIdFromId(data.id)
+
+  const projectV1 = await getProjectV1ByCheck(data.check, networkId)
+  if (typeof(projectV1) === 'string') {
+    console.error(`processCashierRedeem failed to get project on ${networkId} network that has ${data.check} contributor token`);
+    return false;
+  }
+  if (projectV1 === undefined) {
+    return true;
+  }
 
   let collateral = await getCollateral(data.collateral, networkId)
   if (typeof collateral === 'string') {
@@ -738,8 +768,7 @@ const processNewTask = async (data: Act_NewTask_Data): Promise<boolean> => {
   }
 
   if (cashed === undefined) {
-    console.error(`Project ${projectId} on ${networkId} netwok not found. Skip it.`)
-    return false
+    return true
   }
   const projectV1 = cashed as WithId<ProjectV1Model>
 
@@ -792,14 +821,13 @@ const processCompleteTask = async (data: Act_CompleteTask_Data): Promise<boolean
   }
 
   if (cashed === undefined) {
-    console.error(`Project ${projectId} on ${networkId} netwok not found. Skip it.`)
-    return false
+    return true
   }
   const projectV1 = cashed as WithId<ProjectV1Model>
 
   const taskV1 = await getTaskV1(projectV1._id, data.taskId);
   if (typeof taskV1 === 'string') {
-    console.error(`processNewTask failed to get ${data.projectId} project task ${data.taskId}: ${taskV1}`);
+    console.error(`processCompleteTask failed to get ${data.projectId} project task ${data.taskId}: ${taskV1}`);
     return false;
   }
 
@@ -834,19 +862,17 @@ const processCancelTask = async (data: Act_CancelTask_Data): Promise<boolean> =>
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (typeof(cashed) === 'string') {
-    console.error(`Project ${projectId} on ${networkId} network not found`);
     return false;
   }
 
   if (cashed === undefined) {
-    console.error(`Project ${projectId} on ${networkId} netwok not found. Skip it.`)
-    return false
+    return true
   }
   const projectV1 = cashed as WithId<ProjectV1Model>
 
   const taskV1 = await getTaskV1(projectV1._id, data.taskId);
   if (typeof taskV1 === 'string') {
-    console.error(`processNewTask failed to get ${data.projectId} project task ${data.taskId}: ${taskV1}`);
+    console.error(`processCancelTask failed to get ${data.projectId} project task ${data.taskId}: ${taskV1}`);
     return false;
   }
 

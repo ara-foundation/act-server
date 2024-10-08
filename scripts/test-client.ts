@@ -4,11 +4,11 @@
 import 'dotenv/config';
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
-import { UserCreate, ValidToken } from '../src/handlers/users';
+import { UserCreate, ValidToken } from '../src/routes/users';
 import { AraDiscussion, AraUser, UserScenario } from '../src/types';
 import { CreateSessionToken } from '@ara-foundation/flarum-js-client';
-import { IdeaCreate } from '../src/handlers/logos';
-import { UserScenarioCreate } from '../src/handlers/aurora';
+import { IdeaCreate } from '../src/routes/logos';
+import { UserScenarioCreate } from '../src/routes/aurora';
 
 const port = process.env.PORT || 3000;
 const url = `http://localhost:${port}`;

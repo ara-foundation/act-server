@@ -4,11 +4,13 @@
 import 'dotenv/config';
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
-import { UserCreate, ValidToken } from '../src/routes/users';
+import { LinkWallet, UserCreate, ValidToken } from '../src/routes/users';
 import { AraDiscussion, AraUser, UserScenario } from '../src/types';
 import { CreateSessionToken } from '@ara-foundation/flarum-js-client';
 import { IdeaCreate } from '../src/routes/logos';
 import { UserScenarioCreate } from '../src/routes/aurora';
+import { LinkedWalletModel, PlanModel } from '../src/models';
+import { AddWelcomePage } from '../src/routes/maydone';
 
 const port = process.env.PORT || 3000;
 const url = `http://localhost:${port}`;
@@ -224,6 +226,61 @@ const validToken = async(body: ValidToken): Promise<string|CreateSessionToken> =
   }
 }
 
+const linkWallet = async(username: string, body: LinkWallet): Promise<string|LinkedWalletModel> => {
+  let urlToGo = url + '/users/wallet/' + username;
+  console.log(`Url to go ${urlToGo}`);
+  const response = await fetch(urlToGo, {
+      headers: {
+          'Content-Type': `application/json`,
+      },
+      method: "POST",
+      body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    console.log(`Failed to request data from server`);
+    console.log(await response.json());
+    console.log(JSON.stringify(body));
+    return `Response Status ${response.status}: ${response.statusText}`;
+  }
+
+  try {
+      const json = await response.json();
+      console.log(json);
+      return json as LinkedWalletModel;
+  } catch (e) {
+      return JSON.stringify(e);
+  }
+}
+
+const addWelcome = async(body: AddWelcomePage): Promise<string|PlanModel> => {
+  let urlToGo = url + '/maydone/plan/welcome';
+  console.log(`Url to go ${urlToGo}`);
+  const response = await fetch(urlToGo, {
+      headers: {
+          'Content-Type': `application/json`,
+      },
+      method: "POST",
+      body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    console.log(`Failed to request data from server`);
+    console.log(await response.json());
+    console.log(JSON.stringify(body));
+    return `Response Status ${response.status}: ${response.statusText}`;
+  }
+
+  try {
+      const json = await response.json();
+      console.log(json);
+      return json as PlanModel;
+  } catch (e) {
+      return JSON.stringify(e);
+  }
+}
+
+
 yargs(hideBin(process.argv))
   .command('create-user [username] [password] [email]', 'Registers the user on ara forum', (yargs) => {
     return yargs
@@ -319,6 +376,53 @@ yargs(hideBin(process.argv))
         console.error(res);
     } else {
         console.log(`Validation result`);
+        console.log(res);
+    }
+  })
+  .command('link-wallet [token] [username] [userId] [walletAddress]', 'Link the the given username, user id to the wallet', (yargs) => {
+    return yargs
+      .positional('token', {
+        describe: 'Access token of the user',
+      })
+      .positional('username', {
+        describe: 'Username',
+      })
+      .positional('userId', {
+        describe: 'User id',
+      })
+      .positional('walletAddress', {
+        describe: 'Wallet address of the user',
+        type: "string"
+      })
+  }, async (argv) => {
+    const res = await linkWallet(argv.username as string, argv as LinkWallet)
+    if (typeof(res) === 'string') {
+        console.error(res);
+    } else {
+        console.log(`Link Wallet result`);
+        console.log(res);
+    }
+  })
+  .command('add-welcome [token] [projectId] [networkId] [content]', 'Add a welcome page to the project', (yargs) => {
+    return yargs
+      .positional('token', {
+        describe: 'Access token of the user',
+      })
+      .positional('projectId', {
+        describe: 'project id on the blockchain',
+      })
+      .positional('networkId', {
+        describe: 'network id where project was sangha located in',
+      })
+      .positional('content', {
+        describe: 'Welcome message',
+      })
+  }, async (argv) => {
+    const res = await addWelcome(argv as AddWelcomePage)
+    if (typeof(res) === 'string') {
+        console.error(res);
+    } else {
+        console.log(`add welcome page result`);
         console.log(res);
     }
   })

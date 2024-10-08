@@ -32,7 +32,9 @@
   "dependencies": {
     "@ara-foundation/flarum-js-client": "^0.1.13",
     "@moralisweb3/common-evm-utils": "^2.26.9",
+    "@urql/core": "^5.0.6",
     "cors": "^2.8.5",
+    "croner": "^8.1.2",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.1",
     "express": "^4.19.2",

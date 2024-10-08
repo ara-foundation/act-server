@@ -4,12 +4,14 @@ dotenv.config();
 import cors from "cors";
 import { init as InitForumClient } from './models/forum';
 import { connectToDatabase  } from "./db";
-import { onProjects, onProject } from "./handlers/projects";
-import { onLinkedWallet, onLinkedWalletCreate, onLogin, onThirdwebValidate, onUser, onUserCreate, onValidToken } from "./handlers/users";
-import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./handlers/tasks";
-import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./handlers/logos";
-import { onUserScenarioCreate, onUserScenarios } from "./handlers/aurora";
+import { onProjects, onProject } from "./routes/projects";
+import { onLinkedWallet, onLinkedWalletCreate, onLogin, onThirdwebValidate, onUser, onUserCreate, onValidToken } from "./routes/users";
+import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./routes/tasks";
+import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./routes/logos";
+import { onUserScenarioCreate, onUserScenarios } from "./routes/aurora";
 import bodyParser from 'body-parser';
+import { startTracking } from './indexer'
+import { onAddWelcome } from "./routes/maydone";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -64,6 +66,7 @@ app.post("/logos/idea", onIdeaCreate); // Create a new idea
 app.get("/aurora/user-scenarios", onUserScenarios); // Create a user scenario
 app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenario
 
+app.post("/maydone/plan/welcome", onAddWelcome);
 
 connectToDatabase()
 .then(async () => {
@@ -72,6 +75,13 @@ connectToDatabase()
     } catch (e) {
         console.error(e);
         process.exit(1);
+    }
+
+    try {
+        await startTracking();
+    } catch (e) {
+        console.error(e);
+        process.exit(2);
     }
         
     app.listen(port, () => {

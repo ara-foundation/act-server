@@ -165,7 +165,7 @@ export type UserScenarioContext = {
 }
 
 export type UserScenario = {
-  title: string;
+  title: string,
   context: UserScenarioContext,
   goals: string[],
   problems: UserScenarioProblem[],
@@ -176,36 +176,73 @@ export type UserScenario = {
 }
 
 export type ForumParams = {
-  forum_username: string;
-  forum_user_id: number;
-  forum_discussion_id: number;
-  forum_created_at: string;
+  forum_username?: string;
+  forum_user_id?: number;
+  forum_discussion_id?: number;
+  forum_created_at?: string;
 }
 
 export type Plan = ForumParams & {
-  //
-  // Generic data
-  // 
-  leader_username: string; // the main maintainer
-  leader_user_id: number; // the main maintainer
-  project_name: string; // how the project is named
-  logos_id: number; // the id of the logos
-  user_scenario_id: number; // the matching user scenario
+  project_id: ObjectId;
+  cost_usd: string;
+  sangha_welcome?: string; // the two sentences to interact other people
+}
 
-  // 
-  // ACT Parameters for the snagha
-  // 
+export type Act = ForumParams & {
+  project_id: ObjectId;
   tech_stack: string;
-  cost_usd: number;
-  duration: number; // in days
   source_code_url: string;
   test_url?: string;
+  start_time: number;
+  duration: number;
+}
 
-  // 
-  // Sangha parameter
-  // 
-  token_name: string;
-  token_symbol: string;
-  token_max_supply: string;
-  sangha_welcome: string; // the two sentences to interact other people
+export type Sangha = {
+  ownership?: string,
+  maintainer?: string,
+  check?: string,
+
+  ownershipSymbol?: string,
+  maintainerSymbol?: string,
+  checkSymbol?: string,
+
+  ownership_max_supply?: string;
+  ownership_minted?: string;
+}
+
+// For now, logos, aurora and maydone are retreived from the client.
+// the client must be the leader.
+export type LungtaLinks = {
+  logos_id?: number;
+  aurora_id?: ObjectId;
+  maydone_id?: ObjectId;
+  act_id?: ObjectId;
+  sangha_id?: ObjectId;
+}
+
+export type LinkedWallet = {
+  walletAddress: string,
+  username: string,
+  userId: number,
+}
+
+export type TaskV1 = {
+  projectId: ObjectId,
+  taskId: number;
+  checkAmount: string,
+  startTime: number,
+  endTime: number,
+  payload: string,
+  completed: boolean,
+  canceled: boolean,
+}
+
+export type ProjectV1 = {
+  projectId: number,
+  networkId: number,
+  project_name: string; // how the project is named
+
+  sangha?: Sangha,
+  lungta?: LungtaLinks,
+  leader?: LinkedWallet;
 }

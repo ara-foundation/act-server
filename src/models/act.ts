@@ -4,15 +4,17 @@ import { createDiscussion } from "./forum";
 
 export const actToMarkdown = (project: ProjectV1Model, act: ActModel): string => {
     let html = `
-### To see progress, download Ara Client on [Official website](https://www.ara.foundation/)
-
-    # Project "${project.project_name}" progress\n\n
-    * [Idea that it implements](https://forum.ara.foundation/d/${project.lungta?.logos_id})\n
-    * [User Scenario that it implements](https://forum.ara.foundation/d/${project.lungta?.aurora_id})\n
-    * [Invest](https://forum.ara.foundation/d/${project.lungta?.maydone_id})\n
-    * [Be an owner](https://forum.ara.foundation/d/${project.lungta?.sangha_id})\n
-    \n
-    \n **Invest on the Maydone page: [${project.project_name}](https://maydone.ara.foundation/projects/${project.project_name})
+### To see progress, download Ara Client on [Official website](https://www.ara.foundation/)\n
+\n
+# Project "${project.project_name}" progress\n
+\n
+ * [Idea that it implements](https://forum.ara.foundation/d/${project.lungta?.logos_id})\n
+ * [User Scenario that it implements](https://forum.ara.foundation/d/${project.lungta?.aurora_id})\n
+ * [Invest](https://forum.ara.foundation/d/${project.lungta?.maydone_id})\n
+ * [Be an owner](https://forum.ara.foundation/d/${project.lungta?.sangha_id})\n
+\n
+**Invest on the Maydone page**: [${project.project_name}](https://maydone.ara.foundation/projects/${project.project_name})\n
+\n
 ### Project parameters \n
 \n
 - **Start time**: ${new Date(act.start_time * 1000)}\n
@@ -20,7 +22,7 @@ export const actToMarkdown = (project: ProjectV1Model, act: ActModel): string =>
 - **Source code**: ${act.source_code_url}\n
 - **Test**: ${act.test_url}\n
 - **Tech Stack**:\n
-${act.tech_stack}\n
+${act.tech_stack}
 `
     return html;
 }
@@ -57,7 +59,7 @@ export const createActPost = async(project: ProjectV1Model, data: ActModel): Pro
 
     const title = `Development progress of '${project.project_name}'`;
 
-    const post = await createDiscussion(process.env.ARA_DEV_API_KEY!, title, content, process.env.ARA_MAYDONE_TAG_ID!);
+    const post = await createDiscussion(process.env.ARA_DEV_API_KEY!, title, content, process.env.ARA_ACT_TAG_ID!);
     if (typeof(post) === 'string') {
         return post
     }

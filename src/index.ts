@@ -4,7 +4,7 @@ dotenv.config();
 import cors from "cors";
 import { init as InitForumClient } from './models/forum';
 import { connectToDatabase  } from "./db";
-import { onProjects, onProject } from "./routes/projects";
+import { onProjects, onProject, onProjectByNetwork } from "./routes/projects";
 import { onLinkedWallet, onLinkedWalletCreate, onLogin, onThirdwebValidate, onUser, onUserCreate, onValidToken } from "./routes/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./routes/tasks";
 import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./routes/logos";
@@ -44,6 +44,7 @@ if (process.env.NODE_ENV !== "production") {
  */
 app.get("/projects", onProjects);
 app.get("/project/:id", onProject);
+app.get("/project/:id/:networkId", onProjectByNetwork);
 
 app.get("/tasks", onTasks)
 app.get("/task/:id", onTask);

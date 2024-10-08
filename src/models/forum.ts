@@ -41,6 +41,14 @@ export const init = async(): Promise<void> => {
 }
 
 /**
+ * Return a discussion
+ */
+export const getDiscussion = async(discussionId: number): Promise<string|Discussion> => {
+    const result = await FlarumDiscussions.get(api, discussionId);
+    return result;
+}
+
+/**
  * Return list of discussions
  * @returns list of discussions
  */
@@ -139,6 +147,11 @@ export const convertForumDiscussionsToAraDiscussions = (discussions: DiscussionD
 }
 
 export const convertForumDiscussionToAraDiscussion = (discussion: DiscussionData, included: Discussions["included"]): AraDiscussion => {
+    let postId = discussion.relationships.firstPost?.data.id;
+    if (!discussion.relationships.firstPost) {
+        postId = discussion.relationships.posts!.data[0].id!
+    }
+    
     const araDiscussion: AraDiscussion = {
         type: ConvertForumTagToLungtaType(discussion.relationships?.tags?.data[0].id!),
         id: discussion.id!,
@@ -153,7 +166,7 @@ export const convertForumDiscussionToAraDiscussion = (discussion: DiscussionData
         },
         relationships: {
             user: FindIncludedUserById(included, discussion.relationships.user?.data.id!),
-            firstPost: FindIncludedPostById(included, discussion.relationships.firstPost?.data.id!),
+            firstPost: FindIncludedPostById(included, postId!),
         }
     }
     return araDiscussion;

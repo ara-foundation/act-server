@@ -7,7 +7,7 @@ import { connectToDatabase  } from "./db";
 import { onProjects, onProject, onProjectByNetwork } from "./routes/projects";
 import { onLinkedWallet, onLinkedWalletCreate, onLogin, onThirdwebValidate, onUser, onUserCreate, onValidToken } from "./routes/users";
 import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./routes/tasks";
-import { onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./routes/logos";
+import { onIdea, onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./routes/logos";
 import { onUserScenarioCreate, onUserScenarios } from "./routes/aurora";
 import bodyParser from 'body-parser';
 import { startTracking } from './indexer'
@@ -63,6 +63,7 @@ app.get("/logos/ideas", onIdeas);   // Return list of ideas
 app.get("/logos/ideas/:userName", onIdeasByUserName);
 app.post("/logos/ideas", onIdeasByUrl); // Return list of following ideas after GET /logos/ideas...
 app.post("/logos/idea", onIdeaCreate); // Create a new idea
+app.get("/logos/idea/:id", onIdea); // fetch by forum id
 
 app.get("/aurora/user-scenarios", onUserScenarios); // Create a user scenario
 app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenario

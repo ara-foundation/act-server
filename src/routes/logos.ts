@@ -3,7 +3,7 @@
  * This module handles the Ara platform's idea hub.
  */
 import { Request, Response } from "express";
-import { convertForumDiscussionsToAraDiscussions, createDiscussion, getDiscussions, getDiscussionsByUrl } from "../models/forum";
+import { convertForumDiscussionsToAraDiscussions, convertForumDiscussionToAraDiscussion, createDiscussion, getDiscussion, getDiscussions, getDiscussionsByUrl } from "../models/forum";
 import { LungtaType } from "../types";
 
 export type IdeasByUrl = {
@@ -112,3 +112,22 @@ export const onIdeaCreate = async (req: Request, res: Response) => {
     return res.json(idea);
 }
 
+/**
+ * GET /logos/idea/:id returns an idea by forum id
+ * @param req 
+ * @param res 
+ */
+export const onIdea = async (req: Request, res: Response) => {
+    const discussion = await getDiscussion(parseInt(req.params.id));
+    if (typeof(discussion) === 'string') {
+        return res.status(404).json({message: discussion});
+    }
+
+    const araDiscussion = convertForumDiscussionToAraDiscussion(discussion.data, discussion.included!);
+
+    if (araDiscussion.type !== LungtaType.Logos) {
+        return res.status(400).json({message: 'a requested forum post is not a logos idea'});
+    }
+    
+    res.json(araDiscussion)
+}

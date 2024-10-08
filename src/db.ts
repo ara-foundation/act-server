@@ -26,7 +26,7 @@ export async function connectToDatabase () {
         
     const db: mongoDB.Db = client.db(process.env.DB_NAME);
    
-    const usersCollection: mongoDB.Collection<LinkedWalletModel> = db.collection(process.env.DB_COLLECTION_NAME_USERS!);
+    const usersCollection: mongoDB.Collection<LinkedWalletModel> = db.collection(process.env.DB_COLLECTION_NAME_LINKED_WALLETS!);
     collections.linked_wallets = usersCollection;
 
     const projectsCollection: mongoDB.Collection<ProjectModel> = db.collection(process.env.DB_COLLECTION_NAME_PROJECTS!);

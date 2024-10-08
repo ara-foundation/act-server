@@ -3,9 +3,10 @@
  */
 import { Request, Response } from "express";
 import { collections  } from "../db";
-import { convertForumUserToAraUser, createSessionToken, createUser, getUser, userIdByToken, validToken } from "../models/forum";
+import { createSessionToken, createUser, getUser, userIdByToken, validToken } from "../models/forum";
 import { LinkedWalletModel } from "../models";
 import { CreateSessionToken } from "@ara-foundation/flarum-js-client";
+import { createLinkedWallet, getLinkWallet } from "../models/users";
 
 export type UserCreate = {
     username: string;
@@ -17,6 +18,7 @@ export type ValidToken = CreateSessionToken;
 
 export type LinkWallet = ValidToken & {
     walletAddress: string;
+    userId: number;
 }
 
 /**
@@ -31,16 +33,12 @@ export const onLinkedWallet = async (req: Request, res: Response) => {
         return res.status(400).json({message: "invalid parameter"});
     }
 
-    try {
-        const document = await collections.linked_wallets?.findOne({"username": username});
-        if (document) {
-            res.json(document);
-        } else {
-            res.json({walletAddress: ""})
-        }
-    } catch (e) {
-        res.status(400).json({message: JSON.stringify(e)});
+    const document = await getLinkWallet(username);
+    if (typeof document === 'string') {
+        return res.status(500).json({message: document});
     }
+
+    return res.json(document);
 }
 
 /**
@@ -66,33 +64,19 @@ export const onLinkedWalletCreate = async (req: Request, res: Response) => {
         return res.status(401).json({message: 'Login first'});
     }
 
-    try {
-        const document = await collections.linked_wallets?.findOne({"username": username});
-        if (document && document.walletAddress) {
-            return res.status(403).json({message: 'Wallet address already linked. Contact to support.'})
-        } else {
-            res.status(404).json({walletAddress: ""})
-        }
-    } catch (e) {
-        res.status(400).json({message: JSON.stringify(e)});
-    }
-
     const doc: LinkedWalletModel = {
         username: username,
         walletAddress: data.walletAddress,
+        userId: data.userId,
         nonce: 0,
-      }
-
-    try {
-        const document = await collections.linked_wallets?.insertOne(doc);
-        if (document) {
-            res.json({walletAddress: data.walletAddress});
-        } else {
-            res.status(404).json({walletAddress: ""})
-        }
-    } catch (e) {
-        res.status(400).json({message: JSON.stringify(e)});
     }
+
+    const result = await createLinkedWallet(doc);
+    if (typeof result === 'string') {
+        return res.status(401).json({message: result});
+    }
+
+    return res.json(doc);
 }
 
 /**

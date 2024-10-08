@@ -68,7 +68,7 @@ export const createProjectV1 = async(data: ProjectV1Model): Promise<ProjectV1Mod
 
 export const updateProjectV1 = async(data: ProjectV1Model): Promise<undefined|string> => {
     try {
-        const document = await collections.projects_v1?.updateOne({_id: data._id}, data);
+        const document = await collections.projects_v1?.replaceOne({_id: data._id}, data);
         if (document) {
             return undefined;
         } else {

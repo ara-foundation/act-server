@@ -105,9 +105,6 @@ export const onUserScenarioCreate = async (req: Request, res: Response) => {
         return res.status(400).json({message: 'failed to convert user scenario into a forum post'});
     }
 
-    console.log(`Todo: store the user scenario in the Ara Server in the UserScenario type along with forum id`);
-    console.log(`Todo: the forum id is for the future, when we want to edit the scenario`);
-
     const post = await createDiscussion(data.token, data.content.title, content, process.env.ARA_AURORA_TAG_ID!);
     if (typeof(post) === 'string') {
         return res.status(400).json({message: post})

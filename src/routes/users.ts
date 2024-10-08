@@ -2,7 +2,6 @@
  * This module handles the users
  */
 import { Request, Response } from "express";
-import { collections  } from "../db";
 import { createSessionToken, createUser, getUser, userIdByToken, validToken } from "../models/forum";
 import { LinkedWalletModel } from "../models";
 import { CreateSessionToken } from "@ara-foundation/flarum-js-client";
@@ -164,8 +163,6 @@ export const onValidToken = async(req: Request, res: Response) => {
  * @param res 
  */
 export const onThirdwebValidate = async(req: Request, res: Response) => {
-    console.log("Thirdweb validate:");
-    console.log(req.body);
     const { payload: token } = req.body;
     if (!token) {
         return res.status(401).json({message: "Invalid payload"})
@@ -180,6 +177,8 @@ export const onThirdwebValidate = async(req: Request, res: Response) => {
     if (typeof(user) === "string") {
         return res.status(500).json({message: user});
     }
+
+
 
     // Once the user is successfully verified, you can return the following field
     return res.send({

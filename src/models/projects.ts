@@ -39,6 +39,19 @@ export const getProjectV1ByNetwork = async(projectId: number, networkId: number)
     }
 }
 
+export const getProjectV1ByCheck = async(check: string, networkId: number) => {
+    try {
+        const document = await collections.projects_v1?.findOne({"sangha.check": check, "networkId": networkId});
+        if (document) {
+            return document;
+        } else {
+            return undefined;
+        }
+    } catch (e) {
+        return JSON.stringify(e);
+    }
+}
+
 export const createProjectV1 = async(data: ProjectV1Model): Promise<ProjectV1Model|string> => {
     try {
         const document = await collections.projects_v1?.insertOne(data);

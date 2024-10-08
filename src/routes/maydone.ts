@@ -15,14 +15,16 @@ export type AddWelcomePage = {
 
 export const planToMarkdown = (project: ProjectV1Model, plan: Plan): string => {
     let html = `
-    # Project "${project.project_name}" plan\n\n
-    * [Idea that it implements](https://forum.ara.foundation/d/${project.lungta?.logos_id})\n
-    * [User Scenario that it implements](https://forum.ara.foundation/d/${project.lungta?.aurora_id})\n
-    * [Development progress](https://forum.ara.foundation/d/${project.lungta?.act_id})\n
-    * [Be an owner](https://forum.ara.foundation/d/${project.lungta?.sangha_id})\n
-    \n
-    \n> ${plan.sangha_welcome}\n
-    \n **Invest on the Maydone page: [${project.project_name}](https://maydone.ara.foundation/projects/${project.project_name})
+# Project "${project.project_name}" plan\n\n
+    
+ * [Idea that it implements](https://forum.ara.foundation/d/${project.lungta?.logos_id})\n
+ * [User Scenario that it implements](https://forum.ara.foundation/d/${project.lungta?.aurora_id})\n
+ * [Development progress](https://forum.ara.foundation/d/${project.lungta?.act_id})\n
+ * [Be an owner](https://forum.ara.foundation/d/${project.lungta?.sangha_id})\n
+ \n
+\n> ${plan.sangha_welcome}\n
+
+**Invest on the Maydone page**: [${project.project_name}](https://maydone.ara.foundation/projects/${project.project_name})
 ### Project parameters \n
 \n
 - **Main leader** responsible for the project success: [${project.leader?.username}](https://forum.ara.foundation/u/${project.leader?.userId})\n
@@ -30,8 +32,8 @@ export const planToMarkdown = (project: ProjectV1Model, plan: Plan): string => {
 \n\n
 ## Sangha (a project community)
 \n\n
-- **Token**: ${project.sangha?.ownershipSymbol}
-- **Max supply**: ${project.sangha?.ownership_max_supply}`;
+- **Token** control over the project: ${project.sangha?.ownershipSymbol}
+- **Max supply**: ${parseInt(project.sangha?.ownership_max_supply!)/1e18}`;
 
     return html;
 }

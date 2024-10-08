@@ -2,8 +2,7 @@
  * This module works with the projects created in the Ara Foundation
  */
 import { Request, Response } from "express";
-import { all as allProjects } from "../models/projects";
-import { collections  } from "../db";
+import { all as allProjects, getProjectV1 } from "../models/projects";
 import { ObjectId } from "mongodb";
 
 /**
@@ -32,14 +31,13 @@ export const onProject = async (req: Request, res: Response) => {
         return;
     }
 
-    try {
-        const document = await collections.projects?.findOne({"_id": objectId});
-        if (document) {
-            res.json(document);
-        } else {
-            res.status(404).json({message: "no project"})
-        }
-    } catch (e) {
-        res.status(400).json({message: JSON.stringify(e)});
+    const project = await getProjectV1(objectId);
+    if (project === undefined) {
+        return res.status(404).json({message: 'not found'});
     }
+    if (typeof project === 'string') {
+        return res.status(500).json({message: project});
+    }
+
+    return res.json(project)
 }

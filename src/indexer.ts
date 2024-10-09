@@ -652,7 +652,7 @@ const processNewProject = async (data: Project_NewProject_Data): Promise<undefin
  */
 const processMintOwnership = async (data: Treasury_Mint_Data): Promise<boolean> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = data.projectId_;
+  const projectId = parseInt(data.projectId_.toString());
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (typeof(cashed) === 'string') {

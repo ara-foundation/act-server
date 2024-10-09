@@ -424,7 +424,7 @@ const processCollateralAction = async (
  */
 const processSetProjectInTreasury = async (data: Treasury_SetProject_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = parseInt(data.projectId)
+  const projectId = parseInt(data.projectId.toString())
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (cashed === undefined) {
@@ -457,7 +457,7 @@ const processSetProjectInTreasury = async (data: Treasury_SetProject_Data): Prom
  */
 const processSetProjectLeader = async (data: Project_SetInitialLeader_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = parseInt(data.projectId)
+  const projectId = parseInt(data.projectId.toString())
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (cashed === undefined) {
@@ -500,7 +500,7 @@ const processSetProjectLeader = async (data: Project_SetInitialLeader_Data): Pro
  */
 const processSetProjectSangha = async (data: Project_SetSangha_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = parseInt(data.projectId)
+  const projectId = parseInt(data.projectId.toString())
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (cashed === undefined) {
@@ -542,7 +542,7 @@ const processSetProjectSangha = async (data: Project_SetSangha_Data): Promise<un
  */
 const processNewProject = async (data: Project_NewProject_Data): Promise<undefined> => {
   const networkId = networkIdFromId(data.id)
-  const projectId = parseInt(data.projectId)
+  const projectId = parseInt(data.projectId.toString())
 
   let cashed = await getProjectV1ByNetwork(projectId, networkId)
   if (typeof(cashed) === 'string') {

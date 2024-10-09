@@ -10,7 +10,7 @@ export type LastIndexes = {
 
 export const addIndexTimestamps = async (event_type: IndexedEventType): Promise<string | LastIndexTimestampModel> => {
   // Everything started at latest on 4th september 2024
-  const lastIndexTimestamp: LastIndexTimestampType = {
+  const lastIndexTimestamp: LastIndexTimestampModel = {
     db_timestamp: defaultTimestamp,
     event_type: event_type,
   }

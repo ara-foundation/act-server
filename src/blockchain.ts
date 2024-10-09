@@ -5,30 +5,35 @@ import {
   } from 'ethers'
   import { erc20Abi } from './abis'
   import actV1Abi from '../abi/act_v1'
+
+export const isSupportedNetworkId = (networkId: number) => {
+  return networkId === parseInt(process.env.ACTIVE_NETWORK_ID!);
+}
   
 export const providers: { [key: number]: JsonRpcProvider } = {
     // 11155111: new JsonRpcProvider(process.env.RPC_URL_11155111!),
-    // 137: new JsonRpcProvider(process.env.RPC_URL_137!),
+    137: new JsonRpcProvider(process.env.RPC_URL_137!),
     // 56: new JsonRpcProvider(process.env.RPC_URL_56!),
-    97: new JsonRpcProvider(process.env.RPC_URL_97!),
+    // 97: new JsonRpcProvider(process.env.RPC_URL_97!),
 }
   
 export const signers: { [key: number]: Wallet } = {
     // 11155111: new Wallet(process.env.PRIVATE_KEY_11155111!),
-    // 137: new Wallet(process.env.PRIVATE_KEY_137!),
+    137: new Wallet(process.env.PRIVATE_KEY_137!),
     // 56: new Wallet(process.env.PRIVATE_KEY_56!),
-    97: new Wallet(process.env.PRIVATE_KEY_97!),
+    // 97: new Wallet(process.env.PRIVATE_KEY_97!),
 }
   
 const actV1: { [key: number]: Contract } = {
     // 11155111: new Contract(process.env.ARA_V1_ADDRESS_11155111!, actV1Abi, providers[11155111]),
-    // 137: new Contract(process.env.ARA_V1_ADDRESS_137!, actV1Abi, providers[137]),
+    137: new Contract(process.env.ARA_V1_ADDRESS_137!, actV1Abi, providers[137]),
     // 56: new Contract(process.env.ARA_V1_ADDRESS_56!, actV1Abi, providers[56]),
-    97: new Contract(process.env.ARA_V1_ADDRESS_97!, actV1Abi, providers[97]),
+    // 97: new Contract(process.env.ARA_V1_ADDRESS_97!, actV1Abi, providers[97]),
 }
 
 const nativeSymbol: {[key: number]: string} = {
   97: 'tBNB',
+  137: 'POLYGON',
 }
   
 export const symbolOf = async(tokenAddr: string, networkId: number): Promise<string> => {

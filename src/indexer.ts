@@ -17,7 +17,7 @@ import {
 import { getIndexes, LastIndexes, updateIndexTimestamps } from './indexer/index'
 import { createCollateral, getCollateral, updateCollateral } from './indexer/collateral'
 import { ActModel, CollateralModel, IndexedEventType, LinkedWalletModel, ProjectV1Model, TaskV1Model, UserScenarioModel } from './models'
-import { getTaskTime, symbolOf } from './blockchain'
+import { getTaskTime, isSupportedNetworkId, symbolOf } from './blockchain'
 import { createProjectV1, getProjectV1ByCheck, getProjectV1ByNetwork, updateProjectV1 } from './models/projects'
 import { getLinkWalletByWalletAddress } from './models/users'
 import { AraDiscussion, LinkedWallet, LungtaLinks } from './types'
@@ -88,6 +88,11 @@ const job = Cron(
       let lastIndex: string = '';
 
       for (let event of events[eventType]!) {
+        const networkId = networkIdFromId(event.id);
+        if (!isSupportedNetworkId(networkId)) {
+          continue;
+        }
+
         if (eventTypeRaw === 'TreasuryV1_CollateralVotingInit') {
           const processed = await processCollateralInit(event as Treasury_CollateralInit_Data)
           if (typeof processed === 'string') {

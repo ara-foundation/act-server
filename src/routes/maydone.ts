@@ -13,6 +13,10 @@ export type AddWelcomePage = {
     content: string;
 }
 
+export type PlanWithProject = PlanModel & {
+    project_v1: ProjectV1Model[]
+}
+
 export const planToMarkdown = (project: ProjectV1Model, plan: Plan): string => {
     let html = `
 # Project "${project.project_name}" plan\n\n
@@ -39,19 +43,31 @@ export const planToMarkdown = (project: ProjectV1Model, plan: Plan): string => {
 }
 
 /**
- * GET /aurora/user-scenarios returns the list of the user scenarios
+ * GET /maydone/plans returns the list of the user scenarios
  * @param req 
  * @param res 
  * @returns 
  */
 export const onPlans = async (req: Request, res: Response) => {
-    let cursor = collections.plans?.find({}).sort( { forum_discussion_id: -1 } );
+    let cursor = collections.plans?.aggregate([
+        {
+            $match: {
+                sangha_welcome : {$ne : undefined}
+            }
+        },{
+        $lookup: {
+                from: process.env.DB_COLLECTION_NAME_PROJECTS_V1!,
+                localField: "project_id",
+                foreignField: "_id",
+                as: "project_v1"
+            }
+    }]);
     let result = await cursor?.toArray();
 
     if (result === undefined || result.length == 0) {
         return res.json([]);
     }
-    let rows = result as PlanModel[];
+    let rows = result as PlanWithProject[];
     return res.json(rows);
 }
 

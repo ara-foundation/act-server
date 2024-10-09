@@ -11,7 +11,7 @@ import { onIdea, onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "
 import { onUserScenarioCreate, onUserScenarios } from "./routes/aurora";
 import bodyParser from 'body-parser';
 import { startTracking } from './indexer'
-import { onAddWelcome } from "./routes/maydone";
+import { onAddWelcome, onPlans } from "./routes/maydone";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -68,6 +68,7 @@ app.get("/logos/idea/:id", onIdea); // fetch by forum id
 app.get("/aurora/user-scenarios", onUserScenarios); // Create a user scenario
 app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenario
 
+app.get("/maydone/plans", onPlans);
 app.post("/maydone/plan/welcome", onAddWelcome);
 
 connectToDatabase()

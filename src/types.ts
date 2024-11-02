@@ -185,16 +185,24 @@ export type ForumParams = {
 export type Plan = ForumParams & {
   project_id: ObjectId;
   cost_usd: string;
+  used_budget?: string;   // total amount of budget allocated to parts.
   sangha_welcome?: string; // the two sentences to interact other people
 }
 
 export type Act = ForumParams & {
+  _id?: string;
   project_id: ObjectId;
   tech_stack: string;
   source_code_url: string;
   test_url?: string;
   start_time: number;
   duration: number;
+  parts_amount?: number;
+}
+
+export type ActWithProjectAndPlan = Act & {
+  project_v1: ProjectV1[],
+  plan: Plan[],
 }
 
 export type Sangha = {
@@ -244,5 +252,32 @@ export type ProjectV1 = {
 
   sangha?: Sangha,
   lungta?: LungtaLinks,
-  leader?: LinkedWallet;
+  leader?: LinkedWallet,
+}
+
+export type Scene = {
+  sceneId: string,
+  lines?: {[key: string]: string[]},
+  data?: any,
+}
+
+export type ACTPart = {
+  //
+  // Meta params
+  //
+  objId: string,          // on scene
+  developmentId: string,  // project it belongs too
+  level: number,        // level at which it resides
+  childObjsId: string[],
+  parentObjId: string,
+
+  // 
+  // The part params
+  //
+  projectName: string;
+  techStack: string;
+  deadline: number;
+  maintainer: string;
+  budget: number;
+  usedBudget?: number;
 }

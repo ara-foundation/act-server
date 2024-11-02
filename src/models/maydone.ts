@@ -1,7 +1,6 @@
 import { ObjectId } from "mongodb";
 import { collections } from "../db";
 import { PlanModel, UserScenarioModel } from "../models";
-import { Plan, ProjectV1 } from "../types";
 import { Request, Response } from "express";
 
 

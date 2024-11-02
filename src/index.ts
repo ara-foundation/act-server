@@ -12,6 +12,7 @@ import { onUserScenarioCreate, onUserScenarios } from "./routes/aurora";
 import bodyParser from 'body-parser';
 import { startTracking } from './indexer'
 import { onAddWelcome, onPlans } from "./routes/maydone";
+import { onActs, onNestedParts, onPart, onParts, onScene, onSceneSave } from "./routes/act";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -70,6 +71,13 @@ app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenar
 
 app.get("/maydone/plans", onPlans);
 app.post("/maydone/plan/welcome", onAddWelcome);
+
+app.get("/act/projects", onActs);
+app.get("/act/scenes/:developmentId", onScene);
+app.post("/act/scenes/:developmentId", onSceneSave);
+app.get('/act/parts/:developmentId', onParts);
+app.get('/act/parts/:developmentId/:level/:parentObjId', onNestedParts);
+app.post('/act/part', onPart);
 
 connectToDatabase()
 .then(async () => {

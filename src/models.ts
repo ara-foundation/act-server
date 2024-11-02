@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import { Link, Lungta, ProjectContracts, CheckProjectParams, TaskStatus, Token, UserScenario, ProjectV1, ForumParams, LinkedWallet, Plan, Act, TaskV1 } from "./types";
+import { Link, Lungta, ProjectContracts, CheckProjectParams, TaskStatus, Token, UserScenario, ProjectV1, ForumParams, LinkedWallet, Plan, Act, TaskV1, ACTPart } from "./types";
 
 export class TaskModel {
     constructor(
@@ -36,6 +36,11 @@ export type PlanModel = Plan & {
 export type ActModel = Act & {
   _id?: ObjectId,
 }
+
+export type PartModel = ACTPart & {
+  _id?: ObjectId,
+};
+  
 
 // Identical to the Deposited
 export class ProjectModel {

@@ -1,6 +1,11 @@
+import { ObjectId } from "mongodb";
 import { collections } from "../db";
-import { ActModel, ProjectV1Model } from "../models";
+import { ActModel, PartModel, ProjectV1Model } from "../models";
+import { ActWithProjectAndPlan, Scene } from "../types";
 import { createDiscussion } from "./forum";
+import { Level } from "level";
+
+const db = new Level('./act_scenes.json', { valueEncoding: 'json' })
 
 export const actToMarkdown = (project: ProjectV1Model, act: ActModel): string => {
     let html = `
@@ -83,5 +88,144 @@ export const updateAct = async(data: ActModel): Promise<string|undefined> => {
         return JSON.stringify(error);;
     } 
 
+    return undefined;
+}
+
+export const getAllActs = async(): Promise<ActWithProjectAndPlan[]> => {
+    try {
+        const dbResult = await collections.developments?.aggregate([
+            {
+                $lookup: {
+                    from: process.env.DB_COLLECTION_NAME_PROJECTS_V1!,
+                    localField: "project_id",
+                    foreignField: "_id",
+                    as: "project_v1"
+                }
+            },
+            {
+                $match: {
+                    "project_v1" : {$ne : []}
+                }
+            },
+            {
+                $lookup: {
+                    from: process.env.DB_COLLECTION_NAME_PLANS!,
+                    localField: "project_id",
+                    foreignField: "project_id",
+                    as: "plan"
+                }
+            }
+        ]).toArray();
+        if (dbResult !== undefined) {
+            return dbResult as ActWithProjectAndPlan[]
+        }
+    } catch (e) {
+        console.error(`Error: ${e}`);
+    }
+    return [];
+}
+
+export const getActById = async(devId: string): Promise<ActModel|string> => {
+    const _id = new ObjectId(devId);
+
+    // put the data
+    try {
+        const dbResult = await collections.developments?.findOne({_id});
+
+        if (!dbResult) {
+            return `not found in database`;
+        }
+        return dbResult;
+    } catch (error) {
+        return JSON.stringify(error);
+    } 
+}
+
+export const setActDev = async (data: ActModel): Promise<undefined|string> => {
+    // put the data
+    try {
+        const dbResult = await collections.developments?.replaceOne({_id: data._id}, data);
+    
+        if (!dbResult) {
+            return `Failed to insert the user scenario in the database`;
+        }
+    } catch (error) {
+        return JSON.stringify(error);;
+    } 
+    
+    return undefined;
+}
+
+export const getScene = async (developmentId: string): Promise<Scene|undefined> => {
+    let raw: string = '';
+    try {
+        raw = await db.get(developmentId);
+    } catch (e) {
+        return undefined;
+    }
+
+    return JSON.parse(raw) as Scene;
+}
+
+export const setScene = async(developmentId: string, scene: Scene) => {
+    await db.put(developmentId, JSON.stringify(scene));
+}
+
+export const getParts = async (developmentId: string, level: number, parentObjId?: string): Promise<PartModel[]> => {
+    const query: any = {developmentId, level};
+    if (parentObjId) {
+        query['parentObj'] = parentObjId;
+    }
+
+    try {
+        const dbResult = await collections.parts?.find(query).toArray();
+        if (dbResult !== undefined) {
+            return dbResult as PartModel[]
+        }
+    } catch (e) {
+        console.error(`Error: ${e}`);
+    }
+    return [];   
+}
+
+export const getPart = async (developmentId: string, level: number, objId: string): Promise<PartModel|undefined> => {
+    const query: any = {developmentId, level, objId};
+
+    try {
+        const dbResult = await collections.parts?.findOne(query);
+        if (dbResult !== null) {
+            return dbResult as PartModel;
+        }
+    } catch (e) {
+        console.error(`Error: ${e}`);
+    }
+    return undefined;
+}
+
+export const setPart = async (data: PartModel): Promise<undefined|string> => {
+    if (data._id) {
+        // put the data
+        try {
+            const dbResult = await collections.parts?.replaceOne({_id: data._id}, data);
+        
+            if (!dbResult) {
+                return `Failed to insert the user scenario in the database`;
+            }
+        } catch (error) {
+            return JSON.stringify(error);;
+        } 
+    } else {
+        // put the data
+        try {
+            const dbResult = await collections.parts?.insertOne(data);
+        
+            if (!dbResult) {
+                return `Failed to insert the user scenario in the database`;
+            }
+        } catch (error) {
+            return JSON.stringify(error);;
+        }
+    }
+    
     return undefined;
 }

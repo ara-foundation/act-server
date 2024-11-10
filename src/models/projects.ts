@@ -13,6 +13,17 @@ export const all = async (): Promise<ProjectModel[]> => {
     return rows;
 }
 
+export const getAllV1 = async (): Promise<ProjectV1Model[]> => {
+    let cursor = collections.projects_v1?.find({});
+    let result = await cursor?.toArray();
+
+    if (result === undefined || result.length == 0) {
+        return [];
+    }
+    let rows = result as ProjectV1Model[];
+    return rows;
+}
+
 export const getProjectV1 = async(projectId: ObjectId): Promise<ProjectV1Model|undefined|string> => {
     try {
         const document = await collections.projects_v1?.findOne({_id: projectId});

@@ -174,7 +174,7 @@ export const setScene = async(developmentId: string, scene: Scene) => {
 export const getParts = async (developmentId: string, level: number, parentObjId?: string): Promise<PartModel[]> => {
     const query: any = {developmentId, level};
     if (parentObjId) {
-        query['parentObj'] = parentObjId;
+        query['parentObjId'] = parentObjId;
     }
 
     try {

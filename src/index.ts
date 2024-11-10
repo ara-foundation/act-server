@@ -12,7 +12,7 @@ import { onUserScenarioCreate, onUserScenarios } from "./routes/aurora";
 import bodyParser from 'body-parser';
 import { startTracking } from './indexer'
 import { onAddWelcome, onPlans } from "./routes/maydone";
-import { onActs, onNestedParts, onPart, onParts, onScene, onSceneSave } from "./routes/act";
+import { onActs, onNestedParts, onNestedScene, onNestedSceneSave, onPart, onParts, onScene, onSceneSave } from "./routes/act";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -40,9 +40,6 @@ if (process.env.NODE_ENV !== "production") {
     app.get("/mock-nft-addon/:netId/:txid", onMockNftAddonTasks);
 }
 
-/**
- * Returns all projects
- */
 app.get("/projects", onProjects);
 app.get("/project/:id", onProject);
 app.get("/project/:id/:networkId", onProjectByNetwork);
@@ -74,7 +71,9 @@ app.post("/maydone/plan/welcome", onAddWelcome);
 
 app.get("/act/projects", onActs);
 app.get("/act/scenes/:developmentId", onScene);
+app.get("/act/scenes/:developmentId/:level/:parentObjId", onNestedScene);
 app.post("/act/scenes/:developmentId", onSceneSave);
+app.post("/act/scenes/:developmentId/:level/:parentObjId", onNestedSceneSave);
 app.get('/act/parts/:developmentId', onParts);
 app.get('/act/parts/:developmentId/:level/:parentObjId', onNestedParts);
 app.post('/act/part', onPart);

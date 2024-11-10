@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getActById, getAllActs, getPart, getParts, getScene, setActDev, setPart, setScene } from "../models/act";
-import { ACTPart, Scene } from "../types";
+import { Scene } from "../types";
 import { PartModel } from "../models";
 import { getPlanByProjectId, updatePlan } from "../models/maydone";
 import { formatEther, parseEther } from "ethers";
@@ -30,6 +30,41 @@ export const onScene = async(req: Request, res: Response) => {
     }
 
     return res.json(scene);
+}
+
+/**
+ * GET /act/scenes/:developmentId/:level/:parentObjId returns the scene objects such as data and their positions.
+ * @param req 
+ * @param res 
+ */
+export const onNestedScene = async(req: Request, res: Response) => {
+    const developmentId = req.params.developmentId;
+    const level = req.params.level;
+    const parentObjId = req.params.parentObjId;
+    const key = `${developmentId}-${level}-${parentObjId}`;
+    const scene = await getScene(key);
+    const defaultScene = {sceneId: ''} as Scene;
+    if (scene === undefined) {
+        return res.status(404).json(defaultScene)
+    }
+
+    return res.json(scene);
+}
+
+/**
+ * POST /act/scenes/:developmentId/:level/:parentObjId saves the nested scene
+ * @param req 
+ * @param res 
+ */
+export const onNestedSceneSave = async(req: Request, res: Response) => {
+    const developmentId = req.params.developmentId;
+    const level = req.params.level;
+    const parentObjId = req.params.parentObjId;
+    const key = `${developmentId}-${level}-${parentObjId}`;
+    const scene = req.body as Scene;
+    await setScene(key, scene);
+
+    return res.json({status: 'ok'})
 }
 
 /**
@@ -100,54 +135,102 @@ export const onPart = async(req: Request, res: Response) => {
         return res.status(500).json({message: setted});
     }
     
-    // Update part amount in the Development
-    if (part.level == 1 && foundPart === undefined) {
-        // increase the act amount
-        const actDev = await getActById(part.developmentId);
-        if (typeof(actDev) === 'string') {
-            return res.status(500).json({message: actDev});
-        }
-        if (actDev.parts_amount === undefined) {
-            actDev.parts_amount = 1;
-        } else {
-            actDev.parts_amount++;
-        }
+    // Update part amount of the parent?
+    if (foundPart === undefined) {
+        console.log(`Update the part amount of parent`);
+        if (part.level == 1) {
+            console.log(`Update the part amount of ACT Development`);
+            // increase the act amount
+            const actDev = await getActById(part.developmentId);
+            if (typeof(actDev) === 'string') {
+                return res.status(500).json({message: actDev});
+            }
+            if (actDev.parts_amount === undefined) {
+                actDev.parts_amount = 1;
+            } else {
+                actDev.parts_amount++;
+            }
 
-        const actDevSetted = await setActDev(actDev);
-        if (typeof(actDevSetted) === 'string') {
-            return res.status(500).json({message: actDevSetted});
+            const actDevSetted = await setActDev(actDev);
+            if (typeof(actDevSetted) === 'string') {
+                return res.status(500).json({message: actDevSetted});
+            }
+        } else {
+            console.log(`Update the part amount of the parent part`);
+            const parentPart = await getPart(part.developmentId, part.level - 1, part.parentObjId);
+            if (parentPart === undefined) {
+                return res.status(500).json({message: `Parent of ${part.objId} the ${part.parentObjId} not found`});
+            }
+
+            if (parentPart.childObjsId === null) {
+                parentPart.childObjsId = [part.objId];
+            } else {
+                parentPart.childObjsId.push(part.objId);
+            }
+
+            const parentSetted = await setPart(parentPart);
+            if (typeof(parentSetted) === 'string') {
+                return res.status(500).json({message: parentSetted});
+            }
         }
     }
 
-    // Budget increase
-    if (part.level === 1 && (foundPart === undefined || foundPart.budget !== part.budget)) {
-        // Just to get the project id, and through the project id get the plan id
-        const actDev = await getActById(part.developmentId);
-        if (typeof(actDev) === 'string') {
-            return res.status(500).json({message: actDev});
-        }
-        const plan = await getPlanByProjectId(actDev.project_id);
-        if (typeof(plan) === 'string') {
-            return res.status(500).json({message: plan});
-        }
-
-        if (plan.used_budget === undefined) {
-            plan.used_budget = parseEther(part.budget.toString()).toString();
-        } else {
-            const planBudgetF = parseFloat(formatEther(plan.used_budget));
-            let diff = 0;
-            if (foundPart === undefined) {
-                diff = part.budget;
-            } else {
-                diff = part.budget - foundPart.budget;
+    // Update used budget?
+    if (foundPart === undefined || foundPart.budget !== part.budget) {
+        console.log(`Update the used budget of the parent`);
+        if (part.level === 1) {
+            console.log(`Update the used budget of ACT Development`);
+            // Just to get the project id, and through the project id get the plan id
+            const actDev = await getActById(part.developmentId);
+            if (typeof(actDev) === 'string') {
+                return res.status(500).json({message: actDev});
             }
-            const planBudgetUpdatedF = planBudgetF + diff
-            plan.used_budget = parseEther(planBudgetUpdatedF.toString()).toString();
-        }
+            const plan = await getPlanByProjectId(actDev.project_id);
+            if (typeof(plan) === 'string') {
+                return res.status(500).json({message: plan});
+            }
 
-        const updated = await updatePlan(plan);
-        if (updated !== undefined) {
-            return res.status(500).json({message: updated});
+            if (plan.used_budget === undefined) {
+                plan.used_budget = parseEther(part.budget.toString()).toString();
+            } else {
+                const planBudgetF = parseFloat(formatEther(plan.used_budget));
+                let diff = 0;
+                if (foundPart === undefined) {
+                    diff = part.budget;
+                } else {
+                    diff = part.budget - foundPart.budget;
+                }
+                const planBudgetUpdatedF = planBudgetF + diff
+                plan.used_budget = parseEther(planBudgetUpdatedF.toString()).toString();
+            }
+
+            const updated = await updatePlan(plan);
+            if (updated !== undefined) {
+                return res.status(500).json({message: updated});
+            }
+        } else {
+            console.log(`Update the used budget of the parent part`);
+            const parentPart = await getPart(part.developmentId, part.level - 1, part.parentObjId);
+            if (parentPart === undefined) {
+                return res.status(500).json({message: `Parent of ${part.objId} the ${part.parentObjId} not found`});
+            }
+
+            if (parentPart.usedBudget === undefined) {
+                parentPart.usedBudget = part.budget;
+            } else {
+                let diff = 0;
+                if (foundPart === undefined) {
+                    diff = part.budget;
+                } else {
+                    diff = part.budget - foundPart.budget;
+                }
+                parentPart.usedBudget += diff;
+            }
+
+            const parentSetted = await setPart(parentPart);
+            if (typeof(parentSetted) === 'string') {
+                return res.status(500).json({message: parentSetted});
+            }
         }
     }
 

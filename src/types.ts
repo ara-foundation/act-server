@@ -255,6 +255,13 @@ export type ProjectV1 = {
   leader?: LinkedWallet,
 }
 
+export type DIOSTransfer = ProjectV1 &
+{
+    version_update_time?: string;
+    inputs: string[];        // Equivalent of DIOSData.Type enum
+    outputs: string[];
+}
+
 export type Scene = {
   sceneId: string,
   lines?: {[key: string]: string[]},

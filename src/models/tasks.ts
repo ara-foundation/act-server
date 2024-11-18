@@ -3,7 +3,8 @@
  */
 import { ObjectId, WithId } from "mongodb";
 import { collections  } from "../db";
-import { TaskV1Model } from "../models";
+import { TaskV1Model, TaskV2Model } from "../models";
+import { TaskV2 } from "../types";
 
 /**
  * Returns a task for a project
@@ -46,6 +47,63 @@ export const updateTaskV1 = async(data: TaskV1Model): Promise<string|boolean> =>
             return false;
         } else {
             return true;
+        }
+    } catch(e) {
+        return JSON.stringify(e);
+    }
+}
+
+/**
+ * Count amount of tasks. In case of error returns an error string. Otherwise a number.
+ * @param developmentId 
+ * @param level 
+ * @param parentObjId 
+ * @returns 
+ */
+export const countTasksV2 = async(developmentId: string, level?: number, parentObjId?: string): Promise<number|string> => {
+    const query: any = {developmentId, level};
+    if (parentObjId) {
+        query['parentObjId'] = parentObjId;
+    }
+
+    try {
+        const dbResult = await collections.tasks_v2?.estimatedDocumentCount(query);
+        if (dbResult !== undefined) {
+            return dbResult!
+        } else {
+            return 0;
+        }
+    } catch (e) {
+        return JSON.stringify(e);
+    }
+}
+
+
+export const getTasksV2 = async(developmentId: string, level?: number, parentObjId?: string): Promise<TaskV2Model[]> => {
+        const query: any = {developmentId, level};
+        if (parentObjId && level != undefined && level >= 1) {
+            query['parentObjId'] = parentObjId;
+            query['level'] = level;
+        }
+    
+        try {
+            const dbResult = await collections.tasks_v2?.find(query).toArray();
+            if (dbResult !== undefined) {
+                return dbResult as TaskV2Model[]
+            }
+        } catch (e) {
+            console.error(`Error: ${e}`);
+        }
+        return [];   
+}
+
+export const saveTaskV2s = async(data: TaskV2[]): Promise<string|undefined> => {
+    try {
+        const document = await collections.tasks_v2?.insertMany(data);
+        if (!document) {
+            return `failed to insert ${JSON.stringify(data)}`;
+        } else {
+            return undefined;
         }
     } catch(e) {
         return JSON.stringify(e);

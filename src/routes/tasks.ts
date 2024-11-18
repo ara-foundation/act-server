@@ -5,8 +5,9 @@ import { Request, Response } from "express";
 import { txToTask as txToNftAddonTask, taskBySourceId, nftAddonSourceId, saveTask, animateTitle, animateContent, all as allTasks, TaskWithData, addNftImage } from "../nft_addon_task";
 import { ObjectId } from "mongodb";
 import { collections  } from "../db";
-import { TaskModel } from "../models";
+import { TaskModel, TaskV2Model } from "../models";
 import { Task } from "../types";
+import { getTasksV2, saveTaskV2s } from "../models/tasks";
 
 /**
  * GET /tasks returns all tasks
@@ -154,4 +155,80 @@ export const onMockNftAddonTasks = async (req: Request, res: Response) => {
     await collections.tasks?.insertMany(tasks);
 
     res.json({status: "OK", message: "inserted nfts from 2127 to 2176"});
+}
+
+/**
+ * GET /act/tasks/:developmentId saves the scene
+ * @param req 
+ * @param res 
+ */
+export const onTasksV2 = async(req: Request, res: Response) => {
+    const developmentId = req.params.developmentId;
+    const tasks = await getTasksV2(developmentId, 0);
+
+    res.json(tasks)
+}
+
+/**
+ * GET /act/tasks/:developmentId/:level/:parentObjId saves the scene
+ * @param req 
+ * @param res 
+ */
+export const onNestedTasksV2 = async(req: Request, res: Response) => {
+    const developmentId = req.params.developmentId;
+    const level = parseInt(req.params.level);
+    const parentObjId = req.params.parentObjId;
+    if (!parentObjId || level < 1) {
+        return res.status(400).json({message: 'invalid parameter of parentObjId or level (must be greater than 1)'});
+    }
+    const tasks = await getTasksV2(developmentId, level, parentObjId);
+
+    return res.json(tasks)
+}
+
+export const onSaveTaskV2s = async(req: Request, res: Response) => {
+    const developmentId = req.params.developmentId;
+    const tasks = req.body as TaskV2Model[];
+    if (!tasks || tasks.length == 0) {
+        return res.status(400).json({message: 'no tasks were provided'});
+    }
+    for (let i in tasks) {
+        tasks[i]._id = undefined;
+        tasks[i].level = 0;
+        tasks[i].parentObjId = undefined;
+        tasks[i].developmentId = developmentId;
+    }
+    const err = await saveTaskV2s(tasks);
+
+    if (err !== undefined) {
+        return res.status(500).json({message: `failed to save tasks: ${err}`});
+    }
+
+    return res.json({status: 'ok'})
+}
+
+export const onSaveNestedTaskV2s = async(req: Request, res: Response) => {
+    const developmentId = req.params.developmentId;
+    const level = parseInt(req.params.level);
+    const parentObjId = req.params.parentObjId;
+    if (!parentObjId || !level || level < 1) {
+        return res.status(400).json({message: 'invalid parameter of parentObjId or level (must be greater than 1)'});
+    }
+    const tasks = req.body as TaskV2Model[];
+    if (!tasks || tasks.length == 0) {
+        return res.status(400).json({message: 'no tasks were provided'});
+    }
+    for (let i in tasks) {
+        tasks[i]._id = undefined;
+        tasks[i].level = level;
+        tasks[i].parentObjId = parentObjId;
+        tasks[i].developmentId = developmentId;
+    }
+    const err = await saveTaskV2s(tasks);
+
+    if (err !== undefined) {
+        return res.status(500).json({message: `failed to save tasks: ${err}`});
+    }
+
+    return res.json({status: 'ok'})
 }

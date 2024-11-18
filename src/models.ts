@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import { Link, Lungta, ProjectContracts, CheckProjectParams, TaskStatus, Token, UserScenario, ProjectV1, ForumParams, LinkedWallet, Plan, Act, TaskV1, ACTPart } from "./types";
+import { Link, Lungta, ProjectContracts, CheckProjectParams, TaskStatus, Token, UserScenario, ProjectV1, ForumParams, LinkedWallet, Plan, Act, TaskV1, ACTPart, TaskV2 } from "./types";
 
 export class TaskModel {
     constructor(
@@ -107,5 +107,9 @@ export type LastIndexTimestampModel = {
 }
 
 export type TaskV1Model = TaskV1 & {
+  _id?: ObjectId
+}
+
+export type TaskV2Model = TaskV2 & {
   _id?: ObjectId
 }

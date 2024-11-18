@@ -6,7 +6,7 @@ import { init as InitForumClient } from './models/forum';
 import { connectToDatabase  } from "./db";
 import { onProjects, onProject, onProjectByNetwork } from "./routes/projects";
 import { onLinkedWallet, onLinkedWalletCreate, onLogin, onThirdwebValidate, onUser, onUserCreate, onValidToken } from "./routes/users";
-import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks } from "./routes/tasks";
+import { onTasks, onTask, onAddNftAddonTask, onMockNftAddonTasks, onTasksV2, onNestedTasksV2, onSaveTaskV2s, onSaveNestedTaskV2s } from "./routes/tasks";
 import { onIdea, onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "./routes/logos";
 import { onUserScenarioCreate, onUserScenarios } from "./routes/aurora";
 import bodyParser from 'body-parser';
@@ -78,6 +78,10 @@ app.post("/act/scenes/:developmentId/:level/:parentObjId", onNestedSceneSave);
 app.get('/act/parts/:developmentId', onParts);
 app.get('/act/parts/:developmentId/:level/:parentObjId', onNestedParts);
 app.post('/act/part', onPart);
+app.get('/act/tasks/:developmentId', onTasksV2); // Return for level 1 of development id
+app.get('/act/tasks/:developmentId/:level/:parentObjId', onNestedTasksV2);
+app.post('/act/tasks/:developmentId', onSaveTaskV2s); // Return for level 1 of development id
+app.post('/act/tasks/:developmentId/:level/:parentObjId', onSaveNestedTaskV2s);
 
 app.post('/dios/transfers', onDIOSTransfers);
 

@@ -1,6 +1,6 @@
 import * as mongoDB from "mongodb";
 import dotenv from "dotenv";
-import { ActModel, CollateralModel, LinkedWalletModel, PartModel, PlanModel, ProjectModel, ProjectV1Model, TaskModel, TaskV1Model, UserScenarioModel } from "./models";
+import { ActModel, CollateralModel, LinkedWalletModel, PartModel, PlanModel, ProjectModel, ProjectV1Model, TaskModel, TaskV1Model, TaskV2Model, UserScenarioModel } from "./models";
 import { LastIndexTimestampModel } from "./models";
 dotenv.config();
 
@@ -11,11 +11,12 @@ export const collections: {
     user_scenarios?: mongoDB.Collection<UserScenarioModel>,
     plans?: mongoDB.Collection<PlanModel>,
     indexes?: mongoDB.Collection<LastIndexTimestampModel>,
-    collaterals?: mongoDB.Collection<CollateralModel>
-    projects_v1?: mongoDB.Collection<ProjectV1Model>
-    developments?: mongoDB.Collection<ActModel>
-    tasks_v1?: mongoDB.Collection<TaskV1Model>
-    parts?: mongoDB.Collection<PartModel>
+    collaterals?: mongoDB.Collection<CollateralModel>,
+    projects_v1?: mongoDB.Collection<ProjectV1Model>,
+    developments?: mongoDB.Collection<ActModel>,
+    tasks_v1?: mongoDB.Collection<TaskV1Model>,
+    parts?: mongoDB.Collection<PartModel>,
+    tasks_v2?: mongoDB.Collection<TaskV2Model>,
 } = {}
 
 export async function connectToDatabase () {
@@ -60,6 +61,9 @@ export async function connectToDatabase () {
     const partsCollection: mongoDB.Collection<PartModel> = db.collection(process.env.DB_COLLECTION_NAME_PARTS!);
     collections.parts = partsCollection
 
+    const tasksV2Collection: mongoDB.Collection<TaskV2Model> = db.collection(process.env.DB_COLLECTION_NAME_TASKS_V2!);
+    collections.tasks_v2 = tasksV2Collection;
+
     collections.linked_wallets.createIndex({walletAddress: 1});
     collections.linked_wallets.createIndex({username: 1}, {unique: true});
 
@@ -89,6 +93,10 @@ export async function connectToDatabase () {
     collections.parts.createIndex({developmentId: 1}, {unique: false})
     collections.parts.createIndex({developmentId: 1, level: 1}, {unique: false})
     collections.parts.createIndex({developmentId: 1, level: 1, parentObjId: 1}, {unique: false})
+
+    collections.tasks_v2.createIndex({developmentId: 1}, {unique: false})
+    collections.tasks_v2.createIndex({developmentId: 1, level: 1}, {unique: false})
+    collections.tasks_v2.createIndex({developmentId: 1, level: 1, parentObjId: 1}, {unique: false})
 
     console.log(`[Server] Connected to ${db.databaseName} database.`);
  }

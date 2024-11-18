@@ -245,6 +245,24 @@ export type TaskV1 = {
   canceled: boolean,
 }
 
+// By default its todo, which means its in idle.
+// Doing is if a freelancer started to work on it.
+// Test is when a freelancer completed the job.
+// Completed if maintainer approved the tested task.
+export type TaskStatusV2 = "todo" | "doing" | "test" | "completed";
+
+export type TaskV2 = {
+  title: string;
+  description: string;
+  deadline: string;
+  price_usd: number;
+  est_hours: number;
+  developmentId: string;
+  level: number;
+  parentObjId?: string;
+  status: TaskStatusV2;
+}
+
 export type ProjectV1 = {
   projectId: number,
   networkId: number,

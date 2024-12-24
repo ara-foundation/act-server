@@ -30,7 +30,7 @@ export const getLinkWallet = async (username: string): Promise<LinkedWalletModel
         if (document) {
             return document;
         } else {
-            return {walletAddress: "", username: username, userId: 0, nonce: 0};
+            return {walletAddress: "", username: username, userId: 0, nonce: 0} as LinkedWalletModel;
         }
     } catch (e) {
         return JSON.stringify(e);

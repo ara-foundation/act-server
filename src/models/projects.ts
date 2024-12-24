@@ -89,3 +89,16 @@ export const updateProjectV1 = async(data: ProjectV1Model): Promise<undefined|st
         return JSON.stringify(e);
     }
 }
+
+export const countProjectV1 = async(): Promise<number> => {
+    try {
+        const amount = await collections.projects_v1?.countDocuments();
+        if (amount === undefined) {
+            return 0;
+        }
+        return amount;
+    } catch (e) {
+        console.error(e);
+        return 0;
+    }
+}

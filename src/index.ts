@@ -11,7 +11,7 @@ import { onIdea, onIdeaCreate, onIdeas, onIdeasByUrl, onIdeasByUserName } from "
 import { onUserScenarioCreate, onUserScenarios } from "./routes/aurora";
 import bodyParser from 'body-parser';
 import { startTracking } from './indexer'
-import { onAddWelcome, onPlans } from "./routes/maydone";
+import { onAddPlan, onAddWelcome, onPlans } from "./routes/maydone";
 import { onActs, onNestedParts, onNestedScene, onNestedSceneSave, onPart, onParts, onScene, onSceneSave } from "./routes/act";
 import { onDIOSTransfers } from "./routes/dios";
 
@@ -69,6 +69,7 @@ app.post("/aurora/user-scenario", onUserScenarioCreate); // Create a user scenar
 
 app.get("/maydone/plans", onPlans);
 app.post("/maydone/plan/welcome", onAddWelcome);
+app.post("/maydone/plan", onAddPlan);
 
 app.get("/act/projects", onActs);
 app.get("/act/scenes/:developmentId", onScene);
@@ -94,15 +95,21 @@ connectToDatabase()
         process.exit(1);
     }
 
-    try {
-        await startTracking();
-    } catch (e) {
-        console.error(e);
-        process.exit(2);
+    const indexerDisabled = process.env.INDEXER_DISABLED!;
+    if (!indexerDisabled || indexerDisabled === 'false') {
+        console.log(`[Indexer]: enabled, start tracking...`);
+        try {
+            await startTracking();
+        } catch (e) {
+            console.error(e);
+            process.exit(2);
+        }
+    } else {
+        console.log(`[Indexer]: disabled in the settings`);
     }
         
     app.listen(port, () => {
-        console.log(`[server]: ACT Server is running at http://localhost:${port}`);
+        console.log(`[Server]: ACT Server is running at http://localhost:${port}`);
     });
 })
 .catch((error: Error) => {

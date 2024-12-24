@@ -98,5 +98,5 @@ export async function connectToDatabase () {
     collections.tasks_v2.createIndex({developmentId: 1, level: 1}, {unique: false})
     collections.tasks_v2.createIndex({developmentId: 1, level: 1, parentObjId: 1}, {unique: false})
 
-    console.log(`[Server] Connected to ${db.databaseName} database.`);
+    console.log(`[Database] Connected to ${db.databaseName} database.`);
  }

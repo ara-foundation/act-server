@@ -137,9 +137,7 @@ export const onPart = async(req: Request, res: Response) => {
     
     // Update part amount of the parent?
     if (foundPart === undefined) {
-        console.log(`Update the part amount of parent`);
         if (part.level == 1) {
-            console.log(`Update the part amount of ACT Development`);
             // increase the act amount
             const actDev = await getActById(part.developmentId);
             if (typeof(actDev) === 'string') {

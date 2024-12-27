@@ -130,7 +130,7 @@ export const getActById = async(devId: string): Promise<ActModel|string> => {
 
     // put the data
     try {
-        const dbResult = await collections.developments?.findOne({id: _id});
+        const dbResult = await collections.developments?.findOne({_id: _id});
 
         if (!dbResult) {
             return `not found in database`;

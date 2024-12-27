@@ -190,7 +190,6 @@ export type Plan = ForumParams & {
 }
 
 export type Act = ForumParams & {
-  _id?: string;
   project_id: ObjectId;
   tech_stack: string;
   source_code_url: string;

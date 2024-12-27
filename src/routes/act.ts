@@ -118,8 +118,10 @@ export const onNestedParts = async(req: Request, res: Response) => {
  */
 export const onPart = async(req: Request, res: Response) => {
     const part = req.body as PartModel;
+    console.log(`Act Part was added`);
 
     if (!part.objId || !part.developmentId || !part.level) {
+        console.log(`First`);
         return res.status(400).json({message: 'No obj id or dev id or level'});
     }
 
@@ -132,6 +134,7 @@ export const onPart = async(req: Request, res: Response) => {
 
     const setted = await setPart(part);
     if (typeof(setted) === 'string') {
+        console.log(`Second: ${setted}`);
         return res.status(500).json({message: setted});
     }
     
@@ -141,6 +144,7 @@ export const onPart = async(req: Request, res: Response) => {
             // increase the act amount
             const actDev = await getActById(part.developmentId);
             if (typeof(actDev) === 'string') {
+                console.log(`Third: ${actDev}`);
                 return res.status(500).json({message: actDev});
             }
             if (actDev.parts_amount === undefined) {
@@ -151,12 +155,14 @@ export const onPart = async(req: Request, res: Response) => {
 
             const actDevSetted = await setActDev(actDev);
             if (typeof(actDevSetted) === 'string') {
+                console.log(`Fourth: ${actDevSetted}`);
                 return res.status(500).json({message: actDevSetted});
             }
         } else {
             console.log(`Update the part amount of the parent part`);
             const parentPart = await getPart(part.developmentId, part.level - 1, part.parentObjId);
             if (parentPart === undefined) {
+                console.log(`Parent not found: ${setted}`);
                 return res.status(500).json({message: `Parent of ${part.objId} the ${part.parentObjId} not found`});
             }
 
@@ -168,6 +174,7 @@ export const onPart = async(req: Request, res: Response) => {
 
             const parentSetted = await setPart(parentPart);
             if (typeof(parentSetted) === 'string') {
+                console.log(`Parent Setted: ${parentSetted}`);
                 return res.status(500).json({message: parentSetted});
             }
         }
@@ -181,10 +188,12 @@ export const onPart = async(req: Request, res: Response) => {
             // Just to get the project id, and through the project id get the plan id
             const actDev = await getActById(part.developmentId);
             if (typeof(actDev) === 'string') {
+                console.log(`get act by id: ${actDev}`);
                 return res.status(500).json({message: actDev});
             }
             const plan = await getPlanByProjectId(actDev.project_id);
             if (typeof(plan) === 'string') {
+                console.log(`get plan by project id: ${plan}`);
                 return res.status(500).json({message: plan});
             }
 
@@ -204,6 +213,7 @@ export const onPart = async(req: Request, res: Response) => {
 
             const updated = await updatePlan(plan);
             if (updated !== undefined) {
+                console.log(`update the plan: ${updated}`);
                 return res.status(500).json({message: updated});
             }
         } else {
@@ -227,6 +237,7 @@ export const onPart = async(req: Request, res: Response) => {
 
             const parentSetted = await setPart(parentPart);
             if (typeof(parentSetted) === 'string') {
+                console.log(`Set the parent: ${parentSetted}`);
                 return res.status(500).json({message: parentSetted});
             }
         }
